@@ -1,0 +1,50 @@
+---
+title: "Brouillon rendu"
+format: 
+  html:
+    citeproc: false
+    filters:
+      - "citeproc.lua"
+      - "wordcount.lua"
+editor: visual
+author: "jacopo hilde leopold"
+code-fold: true
+---
+
+```{r, echo = FALSE, message = FALSE}
+rm(list=ls(all=TRUE))
+library(ggplot2)
+library(vroom)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+library(plotly)
+library(here)
+library(tidyverse)
+
+here::i_am("M2SES.Rproj")
+
+Annuaire <- vroom("fr-en-annuaire-education.csv")
+ParcourSup <- vroom("fr-esr-parcoursup.csv")
+Eloignement <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")
+
+IPS <- vroom("fr-en-ips_lycees.csv")
+
+IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+#transformer un d.f en objet sf --> st_as_sf(objet)
+
+
+#fusionner IPS et IVAL
+
+IPS_IVAL_gt <- merge(IPS, IVAL_gt, by = "UAI")
+
+```
+
+
+
+```{r}
+
+```
+
