@@ -40,6 +40,9 @@ IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 
 IPS_IVAL_gt <- merge(IPS, IVAL_gt, by = "UAI")
 
+# IVAL pour 2016, 2020, 2024, pour les IVAL gt
+
+
 ```
 
 
