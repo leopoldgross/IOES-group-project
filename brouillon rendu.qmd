@@ -33,18 +33,30 @@ IPS <- vroom("fr-en-ips_lycees.csv")
 
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 
-#transformer un d.f en objet sf --> st_as_sf(objet)
+# Unifier le tables IPS
+
+IPS_pivot_2016 <- IPS_2016_2022 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`, Secteur) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
+
+IPS_pivot_2022 <- IPS_2022_2023 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
+
+IPS_pivot_2024 <- IPS_2023_2024 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
 
 
-#fusionner IPS et IVAL
-
-IPS_IVAL_gt <- merge(IPS, IVAL_gt, by = "UAI")
+IPS_gt <- IPS_gt_2016 |> left_join(IPS_gt_2024) |> left_join(IPS_gt_2022) |> filter(!is.na(`IPS 2016-2017`))
 
 # IVAL pour 2016, 2020, 2024, pour les IVAL gt
+
 IVAL_gt_annees <- IVAL_gt |> rename(IVAL = "Valeur ajoutée du taux de réussite - Toutes séries")|> 
   select(UAI, Année, IVAL) |>
   pivot_wider(names_from = "Année", values_from = IVAL, names_prefix = "IVAL_")
 
+#transformer un d.f en objet sf --> st_as_sf(objet)
 
 
 ```
