@@ -52,6 +52,8 @@ IPS_gt <- IPS_gt_2016 |> left_join(IPS_gt_2024) |> left_join(IPS_gt_2022) |> fil
 
 # IVAL pour 2016, 2020, 2024, pour les IVAL gt
 
+IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
+
 IVAL_gt_annees <- IVAL_gt |> rename(IVAL = "Valeur ajoutée du taux de réussite - Toutes séries")|> 
   select(UAI, Année, IVAL) |>
   pivot_wider(names_from = "Année", values_from = IVAL, names_prefix = "IVAL_")
