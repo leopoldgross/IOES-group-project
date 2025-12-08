@@ -41,6 +41,10 @@ IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 IPS_IVAL_gt <- merge(IPS, IVAL_gt, by = "UAI")
 
 # IVAL pour 2016, 2020, 2024, pour les IVAL gt
+IVAL_gt_annees <- IVAL_gt |> rename(IVAL = "Valeur ajoutée du taux de réussite - Toutes séries")|> 
+  select(UAI, Année, IVAL) |>
+  pivot_wider(names_from = "Année", values_from = IVAL, names_prefix = "IVAL_")
+
 
 
 ```
