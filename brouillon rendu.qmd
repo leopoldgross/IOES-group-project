@@ -88,5 +88,34 @@ IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 ```{r}
 
+# Indice moyen d'éloignement par académie ?
+
+Eloi2024_Acad <- IVAL_IPS_gt %>% group_by(Académie)  %>% summarise(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
+  
+ggplot(Eloi2024_Acad, aes(x = Académie, y = moyenne_eloignement_2024, fill=moyenne_eloignement_2024)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Indice moyen d'éloignement par académie (2024)",
+    x = "Académie",
+    y = "Indice moyen"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
+```{r}
+
+# nombre de lycées privées par académie.
+
+priv_acad <- IVAL_IPS_gt %>%
+  filter(secteur_public == 0) %>%         
+  group_by(Académie) %>%
+  summarise(nb_prives = n()) 
+
+ggplot(priv_acad, aes(x=Académie, y=nb_prives, fill=nb_prives)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
