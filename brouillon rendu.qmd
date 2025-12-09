@@ -108,7 +108,7 @@ ggplot(Eloi2024_Acad, aes(x = Académie, y = moyenne_eloignement_2024, fill=moye
 
 ```{r}
 
-# nombre de lycées privées par académie.
+# nombre de lycées privés par académie.
 
 priv_acad <- IVAL_IPS_gt %>%
   filter(secteur_public == 0) %>%         
@@ -119,3 +119,18 @@ ggplot(priv_acad, aes(x=Académie, y=nb_prives, fill=nb_prives)) + geom_bar(stat
 
 ```
 
+```{r}
+#IPS moyen par Académie. Peut être qu'il faut recflechir à des pondérations...
+IVAL_IPS_gt <- IVAL_IPS_gt %>%
+  mutate(IPS_moy_lycee = rowMeans(
+    select(., `IPS 2016-2017`, `IPS 2020-2021`, `IPS 2024-2025`),
+    na.rm = TRUE
+  ))
+
+IPS_acad <- IVAL_IPS_gt %>%
+  group_by(Académie) %>%
+  summarise(IPS_moyen = mean(IPS_moy_lycee, na.rm = TRUE))
+
+IPS_acad %>% ggplot(aes(x=Académie, y=IPS_moyen, fill=IPS_moyen)) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
