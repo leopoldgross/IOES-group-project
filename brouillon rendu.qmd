@@ -107,7 +107,7 @@ IVAL_IPS_gt %>%
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 ##normalement ce code permet d'avoir sur 1 seul (beau :) ) tableau : lycée, uai en 1 seule lignes, avec tous les indicateurs qui nous intéressent en 2016 - 2020 - 2024 (sauf l'éloigement qu'on a pas en 2016). Mtn on peut s'amuser avec le tableau pour faire des graphs et des regressions !!! (j'ai gardé les infos région, département, Académie pour peut être regarder des effets par zones géogarphique).
-
+Bon enft non j'ai du suppr les académies, dept , region donc les graphs ci dessous marchent plus, je vais voir comment faire.
 
 ```
 
