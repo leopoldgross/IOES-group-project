@@ -32,14 +32,19 @@ Eloignement <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")
 IPS <- vroom("fr-en-ips_lycees.csv")
 
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+
 IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
 
 #faire pivoter les IVAL pour les avoirs en colomne et se débarraser des lignes par années.
 
 IVAL_gt <- IVAL_gt %>% rename(IVAL = `Valeur ajoutée du taux de réussite - Toutes séries`) 
 
+IVAL_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
 
-IVAL_gt <- IVAL_gt %>% select(UAI, Etablissement, Année, IVAL, Secteur, `Valeur ajoutée du taux d'acces 2nde-bac`, `Taux d'accès 2nde-bac`) %>%
+IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Valeur ajoutée du taux d'acces 2nde-bac`, `Taux d'accès 2nde-bac`) %>%
   mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) %>%
     pivot_wider(
     names_from = Année,
@@ -47,9 +52,13 @@ IVAL_gt <- IVAL_gt %>% select(UAI, Etablissement, Année, IVAL, Secteur, `Valeur
     names_glue = "{.value}_{Année}"
   )
 
+IVAL_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
+
 
 #Pareil pour l'éloignement
-Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" )%>%  select(-num_ligne, -Patronyme) %>%
+Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" ) %>%  select(UAI, Année, `Indice éloignement` ) %>%
     pivot_wider(
     names_from = Année,
     values_from = `Indice éloignement`,
@@ -57,6 +66,12 @@ Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" )%>%  sele
   ) 
 
 
+Eloignement %>%
+  count(UAI) %>%
+  filter(n > 1)
+
+
+#il y avait encore des doublons, mtn c'est bon l'équipe!
 
 
 # Unifier le tables IPS
@@ -75,9 +90,21 @@ IPS_pivot_2024 <- IPS_2023_2024 |> select(`Rentrée scolaire`, UAI, `IPS voie GT
 
 IPS_gt <- IPS_pivot_2016 |> left_join(IPS_pivot_2022) |> left_join(IPS_pivot_2024) |> filter(!is.na(`IPS 2016-2017`)) %>% select(`IPS 2016-2017`, `IPS 2020-2021`,`IPS 2024-2025`, UAI )
 
-IVAL_IPS_gt <- inner_join(IVAL_gt,IPS_gt, by = "UAI")
-IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
+IPS_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
+
+
+IVAL_IPS_gt <- inner_join(IVAL_gt,IPS_gt, by = "UAI")
+
+IVAL_IPS_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
+
+
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 ##normalement ce code permet d'avoir sur 1 seul (beau :) ) tableau : lycée, uai en 1 seule lignes, avec tous les indicateurs qui nous intéressent en 2016 - 2020 - 2024 (sauf l'éloigement qu'on a pas en 2016). Mtn on peut s'amuser avec le tableau pour faire des graphs et des regressions !!! (j'ai gardé les infos région, département, Académie pour peut être regarder des effets par zones géogarphique).
 
