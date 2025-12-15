@@ -25,11 +25,18 @@ library(tidyverse)
 
 here::i_am("M2SES.Rproj")
 
+#importer les données
+
 Annuaire <- vroom("fr-en-annuaire-education.csv")
 ParcourSup <- vroom("fr-esr-parcoursup.csv")
 Eloignement <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")
 
-IPS <- vroom("fr-en-ips_lycees.csv")
+IPS_2016_2022 <- vroom("fr-en-ips_lycees.csv")
+IPS_2022_2023 <- vroom("fr-en-ips-lycees-ap2022.csv")
+IPS_2023_2024 <- vroom("fr-en-ips-lycees-ap2023.csv")
+
+
+#filtrer les années pour IVAL
 
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 
@@ -44,13 +51,12 @@ IVAL_gt %>%
   count(UAI) %>%
   filter(n > 1)
 
-IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Valeur ajoutée du taux d'acces 2nde-bac`, `Taux d'accès 2nde-bac`) %>%
-  mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) %>%
-    pivot_wider(
-    names_from = Année,
-    values_from = c(IVAL, `Taux d'accès 2nde-bac`,`Valeur ajoutée du taux d'acces 2nde-bac` ),
-    names_glue = "{.value}_{Année}"
-  )
+IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, Académie,`Valeur ajoutée du taux d'acces 2nde-bac`, `Taux d'accès 2nde-bac`) %>%
+  mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) |>
+  pivot_wider(id_cols = c(UAI, Académie),
+        names_from = Année,
+        values_from = c(IVAL, `Taux d'accès 2nde-bac`,`Valeur ajoutée du taux d'acces 2nde-bac` ),
+        names_glue = "{.value}_{Année}")
 
 IVAL_gt %>%
   count(UAI) %>%
@@ -58,12 +64,12 @@ IVAL_gt %>%
 
 
 #Pareil pour l'éloignement
-Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" ) %>%  select(UAI, Année, `Indice éloignement` ) %>%
-    pivot_wider(
-    names_from = Année,
-    values_from = `Indice éloignement`,
-    names_glue = "{.value}_{Année}"
-  ) 
+
+Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" ) %>%  select(UAI, Année, Académie, `Indice éloignement` ) %>%
+    pivot_wider(id_cols = c(UAI, Académie),
+        names_from = Année,
+        values_from = `Indice éloignement`,
+        names_glue = "{.value}_{Année}")
 
 
 Eloignement %>%
@@ -74,12 +80,13 @@ Eloignement %>%
 #il y avait encore des doublons, mtn c'est bon l'équipe!
 
 
-# Unifier le tables IPS
-IPS_pivot_2016 <- IPS |> select(`Rentrée scolaire`, UAI, `IPS voie GT`, Secteur) |>
-  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+# Pivoter et unifier les tables IPS
+
+IPS_pivot_2016 <- IPS_2016_2022 |> select(`Rentrée scolaire`, Académie, UAI, `IPS voie GT`, Secteur) |>
+  pivot_wider(id_cols = c(UAI,Académie), names_from = 'Rentrée scolaire',
               values_from = 'IPS voie GT', , names_prefix = "IPS ")
 
-IPS_pivot_2022 <- IPS_2022_2023 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`) |>
+IPS_pivot_2022 <- IPS_2022_2023 |> select(`Rentrée scolaire`, UAI,  `IPS voie GT`) |>
   pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
               values_from = 'IPS voie GT', , names_prefix = "IPS ")
 
@@ -87,8 +94,7 @@ IPS_pivot_2024 <- IPS_2023_2024 |> select(`Rentrée scolaire`, UAI, `IPS voie GT
   pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
               values_from = 'IPS voie GT', , names_prefix = "IPS ")
 
-
-IPS_gt <- IPS_pivot_2016 |> left_join(IPS_pivot_2022) |> left_join(IPS_pivot_2024) |> filter(!is.na(`IPS 2016-2017`)) %>% select(`IPS 2016-2017`, `IPS 2020-2021`,`IPS 2024-2025`, UAI )
+IPS_gt <- IPS_pivot_2016 |> left_join(IPS_pivot_2022) |> left_join(IPS_pivot_2024) |> filter(!is.na(`IPS 2016-2017`)) %>% select(`IPS 2016-2017`, `IPS 2020-2021`,`IPS 2024-2025`, UAI, Académie )
 
 
 IPS_gt %>%
@@ -96,18 +102,18 @@ IPS_gt %>%
   filter(n > 1)
 
 
-IVAL_IPS_gt <- inner_join(IVAL_gt,IPS_gt, by = "UAI")
+IVAL_IPS_gt <- inner_join(IVAL_gt,IPS_gt, by = c("UAI", "Académie"))
 
 IVAL_IPS_gt %>%
   count(UAI) %>%
   filter(n > 1)
 
-
-
-IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = c("UAI", "Académie"))
 
 ##normalement ce code permet d'avoir sur 1 seul (beau :) ) tableau : lycée, uai en 1 seule lignes, avec tous les indicateurs qui nous intéressent en 2016 - 2020 - 2024 (sauf l'éloigement qu'on a pas en 2016). Mtn on peut s'amuser avec le tableau pour faire des graphs et des regressions !!! (j'ai gardé les infos région, département, Académie pour peut être regarder des effets par zones géogarphique).
-Bon enft non j'ai du suppr les académies, dept , region donc les graphs ci dessous marchent plus, je vais voir comment faire.
+# Bon enft non j'ai du suppr les académies, dept , region donc les graphs ci dessous marchent plus, je vais voir comment faire.
+
+# En théorie j'ai reussi a fixer le problème avec academie
 
 ```
 
@@ -119,15 +125,16 @@ Bon enft non j'ai du suppr les académies, dept , region donc les graphs ci dess
 
 Eloi2024_Acad <- IVAL_IPS_gt %>% group_by(Académie)  %>% summarise(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
   
-ggplot(Eloi2024_Acad, aes(x = Académie, y = moyenne_eloignement_2024, fill=moyenne_eloignement_2024)) +
+ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024), 
+           y = moyenne_eloignement_2024, 
+           fill = moyenne_eloignement_2024)) +
   geom_bar(stat = "identity") +
   theme_minimal() +
   labs(
     title = "Indice moyen d'éloignement par académie (2024)",
     x = "Académie",
     y = "Indice moyen"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
