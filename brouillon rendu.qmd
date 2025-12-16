@@ -206,8 +206,18 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(Region, moyenne_eloignement_2024),
 st_layers("France_entiere.gpkg")
 region <- st_read("France_entiere.gpkg", layer="region")
 region <- region |> rename(region="nom_officiel_en_majuscules")
+region_eloi <- region |> select(Region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="Region")
 
 
+
+tm_shape(region_eloi) + tm_polygons(fill="moyenne_eloignement_2024")
+tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024")
+tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="reds", n=5,
+                                                           style="quantile"))
+
+
+```
 
 ```
 
