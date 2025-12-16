@@ -203,6 +203,7 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(Region, moyenne_eloignement_2024),
 ```
 
 ```{r}
+# Indice moyen d'eloignement par Region (geoplot) ?
 st_layers("France_entiere.gpkg")
 region <- st_read("France_entiere.gpkg", layer="region")
 region <- region |> rename(region="nom_officiel_en_majuscules")
