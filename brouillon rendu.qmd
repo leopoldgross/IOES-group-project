@@ -59,7 +59,7 @@ IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Taux d'accès 2nde-ba
   mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) %>%
     pivot_wider(
     names_from = Année,
-    values_from = c(IVAL, `Taux d'accès 2nde-bac`,`Valeur ajoutée du taux d'acces 2nde-bac`, `Taux de réussite - Toutes séries` ),
+    values_from = c(IVAL, `Taux d'accès 2nde-bac`, `Taux de réussite - Toutes séries` ),
     names_glue = "{.value}_{Année}"
   )
 
