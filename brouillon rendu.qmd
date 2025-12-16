@@ -183,6 +183,34 @@ ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024),
 
 ```
 
+```{r}
+
+# Indice moyen d'éloignement par region ?
+
+Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
+  
+ggplot(Eloi2024_Reg, aes(x = fct_reorder(Region, moyenne_eloignement_2024), 
+           y = moyenne_eloignement_2024, 
+           fill = moyenne_eloignement_2024)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Indice moyen d'éloignement par region (2024)",
+    x = "Region",
+    y = "Indice moyen"
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+st_layers("France_entiere.gpkg")
+region <- st_read("France_entiere.gpkg", layer="region")
+region <- region |> rename(region="nom_officiel_en_majuscules")
+
+
+
+```
+
 
 
 ```{r}
