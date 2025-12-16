@@ -12,6 +12,7 @@ code-fold: true
 ---
 
 ```{r, echo = FALSE, message = FALSE}
+
 rm(list=ls(all=TRUE))
 library(ggplot2)
 library(vroom)
@@ -22,23 +23,27 @@ library(here)
 library(plotly)
 library(here)
 library(tidyverse)
+library(cartogram)
+library(sf)
+library(tidyverse)
+library(spData)
+library(tmap)
+library(cartogram)
 
 here::i_am("M2SES.Rproj")
-
-#importer les données
 
 Annuaire <- vroom("fr-en-annuaire-education.csv")
 ParcourSup <- vroom("fr-esr-parcoursup.csv")
 Eloignement <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")
 
-IPS_2016_2022 <- vroom("fr-en-ips_lycees.csv")
+IPS <- vroom("fr-en-ips_lycees.csv")
 IPS_2022_2023 <- vroom("fr-en-ips-lycees-ap2022.csv")
 IPS_2023_2024 <- vroom("fr-en-ips-lycees-ap2023.csv")
 
-
-#filtrer les années pour IVAL
-
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+
+#transformer un d.f en objet sf --> st_as_sf(objet)
 
 IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
 
@@ -110,6 +115,34 @@ IVAL_IPS_gt %>%
 
 
 
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
+
+#remettre les communes mtn.
+
+IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+IVAL_gt <- IVAL_gt %>% 
+  filter(Année %in% c(2016, 2020, 2024)) %>% 
+  select(UAI, Region, Département, Académie, Commune, `Code commune`) %>% 
+  distinct(UAI, .keep_all = TRUE)
+
+IVAL_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
+
+
+
+
+
+
+
+
+
+
+
+********************
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 #remettre les communes mtn.
