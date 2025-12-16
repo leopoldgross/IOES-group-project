@@ -55,7 +55,7 @@ IVAL_gt %>%
   count(UAI) %>%
   filter(n > 1)
 
-IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Valeur ajoutée du taux d'acces 2nde-bac`, `Taux d'accès 2nde-bac`, `Taux de réussite - Toutes séries`) %>%
+IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Taux d'accès 2nde-bac`, `Taux de réussite - Toutes séries`) %>%
   mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) %>%
     pivot_wider(
     names_from = Année,
