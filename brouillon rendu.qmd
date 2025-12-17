@@ -190,9 +190,9 @@ ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024),
 
 # Indice moyen d'éloignement par region pour 2024 ?
 
-Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
+Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(region="Region") 
   
-ggplot(Eloi2024_Reg, aes(x = fct_reorder(Region, moyenne_eloignement_2024), 
+ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024), 
            y = moyenne_eloignement_2024, 
            fill = moyenne_eloignement_2024)) +
   geom_bar(stat = "identity") +
