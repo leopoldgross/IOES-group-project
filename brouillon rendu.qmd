@@ -41,6 +41,8 @@ library(spData)
 library(tmap)
 library(cartogram)
 
+
+# Importation des donnees:
 here::i_am("M2SES.Rproj")
 
 Annuaire <- vroom("fr-en-annuaire-education.csv")
@@ -53,13 +55,15 @@ IPS_2023_2024 <- vroom("fr-en-ips-lycees-ap2023.csv")
 
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 
+# les donnees pour le Geoplot
+st_layers("France_entiere.gpkg")
+region <- st_read("France_entiere.gpkg", layer="region")
+region <- region |> rename(region="nom_officiel_en_majuscules")
 
-#transformer un d.f en objet sf --> st_as_sf(objet)
-
+#transformer un d.f en objet sf --> st_as_sf(objet):
 IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
 
-#faire pivoter les IVAL pour les avoirs en colomne et se débarraser des lignes par années.
-
+#faire pivoter les IVAL pour les avoirs en colomne et se débarraser des lignes par années:
 IVAL_gt <- IVAL_gt %>% rename(IVAL = `Valeur ajoutée du taux de réussite - Toutes séries`) 
 
 IVAL_gt %>%
@@ -79,7 +83,7 @@ IVAL_gt %>%
   filter(n > 1)
 
 
-#Pareil pour l'éloignement
+#Pareil pour l'éloignement:
 Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" ) %>%  select(UAI, Année, `Indice éloignement` ) %>%
     pivot_wider(
     names_from = Année,
@@ -163,6 +167,13 @@ IVAL_gt %>%
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
 
 ```
+# Regression
+montrer qu'il y a une causalité entre le IPS et le IVAL?
+
+```{r)
+# @ Leopold, si tu veux partager le code que t'as fait pour la regression, je pense que ca pourrait etre un bon point de depart du rendu
+
+```
 
 # Eloignement
 
@@ -204,48 +215,37 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024),
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+# Visualisation des Geodonnees en relation avec l'eloignement
 
+## Indice moyen d'eloignement par Region en 2024 pour toute la France: 
 ```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France metroplolitaine ?
-st_layers("France_entiere.gpkg")
-region <- st_read("France_entiere.gpkg", layer="region")
-region <- region |> rename(region="nom_officiel_en_majuscules")
+# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour toute la France 
+# jsp si on veut garder ca, c'est un peu moche
+
 region_eloi <- region |> select(region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="region")
-
-
 tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
                              fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
                                                            style="quantile"))
+```
 
-# metropol: 
+## Indice moyen d'eloignement par Region en 2024 pour la France metropolitaine: 
+```{r}
+# Indice moyen d'eloignement par Region pour 2024 (geoplot) metropol: 
 
 metropole <- region_eloi |> 
   filter(!code_insee %in% c("01","02","03","04","06"))
-
 tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
                              fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
                                                            style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
 
 ```
 
+## Indice moyen d'eloignement par Region en 2024 pour la France outre mer: 
 ```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France outre mer ?
-st_layers("France_entiere.gpkg")
-region <- st_read("France_entiere.gpkg", layer="region")
-region <- region |> rename(region="nom_officiel_en_majuscules")
-region_eloi <- region |> select(region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="region")
-
-
-tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile"))
-
-
-#outremer
+# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France outre mer 
 
 outremer <- region_eloi |> 
   filter(code_insee %in% c("01","02","03","04","06"))
-
 tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
                              fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
                                                            style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
