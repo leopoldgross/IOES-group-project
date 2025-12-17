@@ -164,11 +164,12 @@ IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
 
 ```
 
-
+# Eloignement
 
 ```{r}
 
 # Indice moyen d'éloignement par académie pour 2024 ?
+# je propose qu'on enleve ca, parce-que on n'arrive pas a faire le geoplot avec les academies, et c'est un peu double avec eloignement sur region
 
 Eloi2024_Acad <- IVAL_IPS_gt %>% group_by(Académie)  %>% summarise(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
   
@@ -205,7 +206,30 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(Region, moyenne_eloignement_2024),
 ```
 
 ```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) ?
+# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France metroplolitaine ?
+st_layers("France_entiere.gpkg")
+region <- st_read("France_entiere.gpkg", layer="region")
+region <- region |> rename(region="nom_officiel_en_majuscules")
+region_eloi <- region |> select(region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="region")
+
+
+tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile"))
+
+# metropol: 
+
+metropole <- region_eloi |> 
+  filter(!code_insee %in% c("01","02","03","04","06"))
+
+tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
+
+```
+
+```{r}
+# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France outre mer ?
 st_layers("France_entiere.gpkg")
 region <- st_read("France_entiere.gpkg", layer="region")
 region <- region |> rename(region="nom_officiel_en_majuscules")
@@ -217,22 +241,17 @@ tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
                                                            style="quantile"))
 
 
-#deux tableaus (metropol et outremer)
+#outremer
 
 outremer <- region_eloi |> 
   filter(code_insee %in% c("01","02","03","04","06"))
-metropole <- region_eloi |> 
-  filter(!code_insee %in% c("01","02","03","04","06"))
-
-tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
 
 tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
                              fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
                                                            style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
 
 ```
+
 
 # IVAL
 
