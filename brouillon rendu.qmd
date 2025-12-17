@@ -11,6 +11,17 @@ author: "jacopo hilde leopold"
 code-fold: true
 ---
 
+# Introduction
+Text Text
+
+```{r, eval = FALSE}
+
+#pour pouvoir convertir le markdown en pdf sans latex (il faut l'enlever du document une fois qu'on l'a installé)
+
+install.packages('tinytex')
+tinytex::install_tinytex()  # install TinyTeX
+```
+
 ```{r, echo = FALSE, message = FALSE}
 
 rm(list=ls(all=TRUE))
@@ -83,8 +94,6 @@ Eloignement %>%
 
 
 
-
-
 # Unifier le tables IPS
 IPS_pivot_2016 <- IPS |> select(`Rentrée scolaire`, UAI, `IPS voie GT`, Secteur) |>
   pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
@@ -113,8 +122,6 @@ IVAL_IPS_gt %>%
   count(UAI) %>%
   filter(n > 1)
 
-
-
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 #remettre les communes mtn.
@@ -136,12 +143,7 @@ IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
 
 
 
-
-
-
-
-
-
+# on n'a pas besoin de la suite, c'est ca?
 ********************
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
