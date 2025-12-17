@@ -55,10 +55,16 @@ IPS_2023_2024 <- vroom("fr-en-ips-lycees-ap2023.csv")
 
 IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
 
-# les donnees pour le Geoplot
+# les donnees pour le Geoplot selon les regions
 st_layers("France_entiere.gpkg")
 region <- st_read("France_entiere.gpkg", layer="region")
 region <- region |> rename(region="nom_officiel_en_majuscules")
+
+# les donnees pour le Geoplot selon les communes (seulement France metropolitaine parce que trop compliqué de zoomé dans la carte complete)
+st_layers("Carto_France.gpkg")
+communes <- st_read("Carto_France.gpkg", layer="commune")
+communes <- communes |> rename(commune="nom_officiel_en_majuscules")
+
 
 #transformer un d.f en objet sf --> st_as_sf(objet):
 IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
@@ -256,20 +262,17 @@ tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
 # IVAL
 
 ```{r}
-# IVAL selon les regions 2016 (geoplot) ?
-# ca fonctionne pas encore
+# IVAL selon les communes 2016 (geoplot) ?
+#
 
-st_layers("France_entiere.gpkg")
-region <- st_read("France_entiere.gpkg", layer="region")
-region <- region |> rename(Region="nom_officiel_en_majuscules")
-IVAL_2016 <- IVAL_IPS_gt |> select(IVAL_2016, Region)
-IVAL_regions <- region |> select(Region, code_insee, code_siren, geometrie) |> right_join(IVAL_2016, by="Region")
+IVAL_2016 <- IVAL_IPS_gt |> rename(commune="Commune") |> select(IVAL_2016, commune) 
+
+IVAL_communes <- communes |>  select(commune, code_insee, geometrie) |> right_join(IVAL_2016, by="commune") 
 
 
-tm_shape(IVAL_regions) + tm_fill(fill="IVAL_2016")
-
-
-
+tm_shape(IVAL_communes) + tm_fill(fill="IVAL_2016",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=5
+                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
 ```
 
 # Public et privé
