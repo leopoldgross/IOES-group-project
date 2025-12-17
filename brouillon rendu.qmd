@@ -177,8 +177,49 @@ IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
 montrer qu'il y a une causalité entre le IPS et le IVAL?
 
 ```{r)
-# @ Leopold, si tu veux partager le code que t'as fait pour la regression, je pense que ca pourrait etre un bon point de depart du rendu
+# je met mes regressions. Elles sont faites sur une seule année : 2020.
 
+IVAL_gt_2020 <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+IVAL_gt_2020 <- IVAL_gt_2020 %>% filter(Année ==2020 )
+
+IVAL_gt_2020 %>% count(UAI)
+
+Eloignement_2020 <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")  %>% filter(Année ==2020)
+
+# ici nous avons, juste pour 2020, l'IVAL et l'éloignement. On va cleaner et merge avec IPS.
+IVAL_gt_eloignement_2020 <- merge(IVAL_gt_2020, Eloignement_2020, by = "UAI") 
+IVAL_gt_eloignement_2020 <- IVAL_gt_eloignement_2020 %>% select(UAI, Etablissement, `Code région`,`Taux de réussite - Toutes séries`, `Valeur ajoutée du taux de réussite - Toutes séries`, `Indice éloignement`, `Taux d'accès 2nde-bac`)
+
+IPS_2020 <- IPS %>% filter(`Rentrée scolaire`=="2020-2021")
+
+IPS_IVAL_ELOI_2020 <- merge(IPS_2020, IVAL_gt_eloignement_2020, by = "UAI" ) %>% select(UAI,`Code du département`,Etablissement, Secteur, `IPS voie GT`,`Taux de réussite - Toutes séries`, `Valeur ajoutée du taux de réussite - Toutes séries`, `Indice éloignement`, `Taux d'accès 2nde-bac`) 
+
+IPS_IVAL_ELOI_2020 <- IPS_IVAL_ELOI_2020 %>%   mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur)
+
+
+reg1_2020 <- lm(
+  `Valeur ajoutée du taux de réussite - Toutes séries` ~ 
+    `Indice éloignement` + secteur_public + `IPS voie GT`,
+  data = IPS_IVAL_ELOI_2020
+)
+
+summary(reg1_2020)
+
+# premier résultat : cette régression n'explique PAS l'IVAL. Donc : l'IVAL est bien corrigé de l'IPS (on ne trouve pas un IVAL meilleur là où il y a des IPS élevés, même après correction), l'éloignement n'a pas d'effet sur l'IVAL, et le fait d'être public oui. Donc, piste à explorer sur le secteur public et privé. 
+
+
+
+#régression du taux de réussite par secteur/IPS/eloignement.
+reg2_2020 <- lm(
+  `Taux de réussite - Toutes séries` ~ 
+    `Indice éloignement` + secteur_public + `IPS voie GT`,
+  data = IPS_IVAL_ELOI_2020
+)
+
+summary(reg2_2020)
+
+# 1/3 de la variation du taux de réussite (en 2020, bac général) est expliquée par IPS + eloignement + secteur. Effet positif de l'IPS et de l'éloignement (effets robustes mais légers), effet négatif du secteur public. (effet fort et robuste). Conclusion (simple) : lycées privés = meilleur taux de réussite.
 ```
 
 # Eloignement
