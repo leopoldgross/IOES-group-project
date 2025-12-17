@@ -263,7 +263,7 @@ tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
 
 ```{r}
 # IVAL selon les communes 2016 (geoplot) ?
-#
+# faut encore y travailler
 
 IVAL_2016 <- IVAL_IPS_gt |> rename(commune="Commune") |> select(IVAL_2016, commune) 
 
@@ -280,7 +280,6 @@ tm_shape(IVAL_communes) + tm_fill(fill="IVAL_2016",
 ```{r}
 
 # nombre de lycées privés par académie.
-# cette partie ne fonctionne pas encore si je la mets en r studio, notamment parce que la variable secteur_public n'est pas dans le df
 
 priv_acad <- IVAL_IPS_gt %>%
   filter(secteur_public == 0) %>%         
