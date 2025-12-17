@@ -217,6 +217,21 @@ tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
                                                            style="quantile"))
 
 
+#deux tableaus (metropol et outremer)
+
+outremer <- region_eloi |> 
+  filter(code_insee %in% c("01","02","03","04","06"))
+metropole <- region_eloi |> 
+  filter(!code_insee %in% c("01","02","03","04","06"))
+
+tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
+
+tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
+
 ```
 
 # IVAL
