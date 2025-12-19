@@ -433,6 +433,48 @@ tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 2)
 
 
 ```
+## Indice moyen d'eloignement par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
+
+```{r}
+Eloi2024_Dep <- IVAL_IPS_gt |> group_by(Département)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(Département="Département") 
+
+departement <- st_read("France_entiere.gpkg", layer="departement")
+departement <- departement |> rename(Département="nom_officiel_en_majuscules")
+
+departement <- departement |> 
+  mutate(Département = case_when(
+      Département == "ALPES-DE-HAUTE-PROVENCE" ~ "ALPES-DE-HTE-PROVENCE",
+      Département == "HAUTE-SAVOIE" ~ "HAUTE SAVOIE",
+      Département == "COTE-D'OR" ~ "COTE D'OR", 
+      Département == "COTES-D'ARMOR" ~ "COTES D'ARMOR",
+      Département == "SEINE-MARITIME" ~ "SEINE MARITIME",
+      TRUE ~ Département))
+
+
+departement_eloi <- departement |> select(Département, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Dep, by="Département")
+
+metropole <- departement_eloi |> filter(!grepl("^97", code_insee))
+guadeloupe <- departement_eloi |> filter(code_insee == "971")
+martinique <- departement_eloi |> filter(code_insee == "972")
+guyane     <- departement_eloi |> filter(code_insee == "973")
+reunion    <- departement_eloi |> filter(code_insee == "974")
+mayotte    <- departement_eloi |> filter(code_insee == "976")
+
+tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile"),
+                              fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_layout(frame=FALSE, component.autoscale = FALSE) + tm_title ("France métropolitaine", frame = TRUE) +
+  tm_borders(col = "darkblue", lwd = 0.3)
+                                    
+
+m_gua <- tm_shape(guadeloupe) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guadeloupe") + tm_borders(col = "darkblue", lwd = 0.3)
+m_mar <- tm_shape(martinique) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Martinique") + tm_borders(col = "darkblue", lwd = 0.3)
+m_guy <- tm_shape(guyane) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guyane") + tm_borders(col = "darkblue", lwd = 0.3)
+m_reu <- tm_shape(reunion) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Réunion") + tm_borders(col = "darkblue", lwd = 0.3)
+m_may <- tm_shape(mayotte) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Mayotte") + tm_borders(col = "darkblue", lwd = 0.3)
+
+tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 1)
+```
 
 # IVAL
 
