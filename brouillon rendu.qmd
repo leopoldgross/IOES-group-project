@@ -171,7 +171,7 @@ IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
 
 
 # on n'a pas besoin de la suite, c'est ca?
-********************
+
 IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
 
 #remettre les communes mtn.
@@ -238,6 +238,128 @@ summary(reg2_2020)
 
 # 1/3 de la variation du taux de réussite (en 2020, bac général) est expliquée par IPS + eloignement + secteur. Effet positif de l'IPS et de l'éloignement (effets robustes mais légers), effet négatif du secteur public. (effet fort et robuste). Conclusion (simple) : lycées privés = meilleur taux de réussite.
 ```
+
+#analyse en composantes principales. Je vais mettre au propre avec interpretation.
+
+```{r}
+
+# ===== ANALYSE EN COMPOSANTES PRINCIPALES =====
+
+# Préparer les données pour l'ACP
+# Identifier les colonnes qualitatives (géographiques)
+cols_quali <- c("Region", "Département", "Académie", "Commune", "Code commune")
+
+# Identifier la position de secteur_public et des colonnes qualitatives
+data_acp_full <- IVAL_IPS_gt %>%
+  select(-UAI) %>%
+  na.omit()
+
+# Trouver les indices des colonnes
+idx_secteur <- which(names(data_acp_full) == "secteur_public")
+idx_quali <- which(names(data_acp_full) %in% cols_quali)
+
+cat("Dimensions des données:", dim(data_acp_full), "\n")
+cat("Colonne secteur_public:", idx_secteur, "\n")
+cat("Colonnes qualitatives:", idx_quali, "\n")
+
+# ===== 1. MATRICE DE CORRÉLATION =====
+# Sélectionner uniquement les variables quantitatives actives
+data_quanti <- data_acp_full %>% 
+  select(-all_of(cols_quali), -secteur_public)
+
+corrplot(cor(data_quanti), method="circle", type="upper", 
+         tl.cex = 0.6, tl.col = "black")
+
+# ===== 2. ACP avec variables supplémentaires =====
+# secteur_public comme variable quantitative supplémentaire
+# variables géographiques comme variables qualitatives supplémentaires
+lycees_pca <- PCA(data_acp_full, 
+                  graph = FALSE, 
+                  scale.unit = TRUE, 
+                  quanti.sup = idx_secteur,
+                  quali.sup = idx_quali)
+
+# ===== 3. VALEURS PROPRES =====
+cat("\n===== VALEURS PROPRES =====\n")
+print(lycees_pca$eig)
+
+# Graphique des valeurs propres (scree plot)
+fviz_screeplot(lycees_pca, addlabels = TRUE, choice = "variance") +
+  ggtitle("Éboulis des valeurs propres - Lycées français")
+
+# ===== 4. ANALYSE DES VARIABLES =====
+cat("\n===== RÉSULTATS POUR LES VARIABLES =====\n")
+print(lycees_pca$var)
+
+# Graphique des variables (base)
+plot(lycees_pca, choix="var")
+
+# Contribution des variables à l'axe 1
+fviz_contrib(lycees_pca, choice ="var", axes = 1) +
+  ggtitle("Contribution des variables à l'axe 1 (Dim 1)")
+
+# Contribution des variables à l'axe 2
+fviz_contrib(lycees_pca, choice ="var", axes = 2) +
+  ggtitle("Contribution des variables à l'axe 2 (Dim 2)")
+
+# Cercle de corrélation avec gradient de couleurs
+fviz_pca_var(lycees_pca, col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE) +
+  ggtitle("Cercle des corrélations - Variables actives")
+
+# ===== 5. ANALYSE DES INDIVIDUS =====
+
+# Graphique des individus (base)
+plot(lycees_pca, choix="ind")
+
+# Graphique coloré par cos2 (qualité de représentation)
+plot(lycees_pca, choix="ind", habillage="cos2")
+
+# Sélection des individus bien représentés (cos2 > 0.7)
+plot(lycees_pca, choix="ind", select="cos2 0.7")
+
+# Graphique avancé avec gradient de couleurs
+fviz_pca_ind(lycees_pca, col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE,
+             pointsize = 1,
+             labelsize = 2,
+             select.ind = list(cos2 = 100)) +
+  ggtitle("Projection des lycées (100 mieux représentés)")
+
+# ===== 6. BIPLOT =====
+fviz_pca_biplot(lycees_pca, 
+                repel = TRUE,
+                col.var = "#2E9FDF",
+                col.ind = "#696969",
+                pointsize = 1,
+                labelsize = 3,
+                select.ind = list(cos2 = 50)) +
+  ggtitle("Biplot - Variables et lycées")
+
+# ===== 7. ANALYSE PAR RÉGION (variable supplémentaire) =====
+# Graphique des individus colorés par région
+fviz_pca_ind(lycees_pca, 
+             geom.ind = "point",
+             col.ind = data_acp_full$Region,
+             palette = "jco",
+             addEllipses = TRUE,
+             legend.title = "Région") +
+  ggtitle("Projection des lycées par région")
+
+# ===== 8. RÉSUMÉ DES RÉSULTATS =====
+cat("\n===== RÉSUMÉ DE L'ACP =====\n")
+cat("Variance expliquée par les 5 premiers axes:\n")
+print(round(lycees_pca$eig[1:5, 2], 2))
+cat("\nVariance cumulée:\n")
+print(round(lycees_pca$eig[1:5, 3], 2))
+
+```
+
+
+
+
 
 # Eloignement
 
@@ -358,6 +480,177 @@ IPS_acad <- IVAL_IPS_gt %>%
 IPS_acad %>% ggplot(aes(x=fct_reorder(Académie,IPS_moyen), y=IPS_moyen, fill=IPS_moyen)) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+# Partie ou on interroge l'effet de la réforme du bac.
+
+```{r}
+
+ggplot(IVAL_IPS_gt, aes(x = IVAL_2016)) +
+  geom_density(fill = "steelblue", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  labs(
+    title = "Distribution de l’IVAL par année",
+    x = "IVAL",
+    y = "Densité"
+  )
+
+ggplot(IVAL_IPS_gt, aes(x = IVAL_2020)) +
+  geom_density(fill = "steelblue", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  labs(
+    title = "Distribution de l’IVAL par année",
+    x = "IVAL",
+    y = "Densité"
+  )
+
+ggplot(IVAL_IPS_gt, aes(x = IVAL_2024)) +
+  geom_density(fill = "steelblue", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  theme_minimal() +
+  labs(
+    title = "Distribution de l’IVAL par année",
+    x = "IVAL",
+    y = "Densité"
+  )
+
+```
+
+```{r}
+library(reshape2)  
+
+IVAL_compare <- IVAL_IPS_gt %>%
+  select(IVAL_2016, IVAL_2024) %>%
+  pivot_longer(cols = everything(), names_to = "annee", values_to = "IVAL")
+
+ggplot(IVAL_compare, aes(x = IVAL, fill = annee)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_fill_manual(values = c("steelblue", "tomato")) +
+  labs(
+    title = "Comparaison des distributions de l’IVAL : 2016 vs 2024",
+    x = "IVAL",
+    y = "Densité",
+    fill = "Année"
+  )
+```
+
+```{r}
+
+#ici je calcule la variation de l'IVAL de chaque lycée, avant et après la réforme du bac, et aussi l'IPS moyen du lycée sur les 3 années.
+IVAL_IPS_gt <- IVAL_IPS_gt %>%
+  mutate(var_IVAL_1624 = IVAL_2024 - IVAL_2016) %>%
+  mutate(IPS_moy_lycee = rowMeans(
+    select(., `IPS 2016-2017`, `IPS 2020-2021`, `IPS 2024-2025`),
+    na.rm = TRUE
+  ))
+
+
+  var_IVAL_privés <- ggplot(IVAL_IPS_gt %>% filter(secteur_public == 0),
+       aes(x =IPS_moy_lycee , y = var_IVAL_1624)) +
+  geom_point(alpha = 0.6, size = 2, color = "tomato") +
+  theme_minimal() +
+  labs(
+    title = "Variation des IVAL - Lycées privés",
+    x = "IPS moyen du lycée",
+    y = "Variation des IVAL - Lycées privés"
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkgrey", linetype = "dashed")
+
+  
+  
+  
+var_IVAL_publics <- ggplot(IVAL_IPS_gt %>% filter(secteur_public == 1),
+       aes(x = IPS_moy_lycee, y = var_IVAL_1624)) +
+  geom_point(alpha = 0.6, size = 2, color = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Variation des IVAL - Lycées publics",
+    x = "IPS moyen",
+    y = "Variation de l'ival 2016 - 2024"
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkgrey", linetype = "dashed")
+
+library(patchwork)
+
+var_IVAL_publics + var_IVAL_privés
+
+
+```
+ICI je fais un graph boites à moustaches pour confirmer la différence de dispersion entre les variation d'IVAL du public et du privé. Plus un test statistique qui confirme fortement ce résultat.
+```{r}
+
+
+ggplot(IVAL_IPS_gt, aes(x = factor(secteur_public),
+                        y = var_IVAL_1624,
+                        fill = factor(secteur_public))) +
+  geom_boxplot(alpha = 0.6, outlier.alpha = 0.4) +
+  scale_fill_manual(values = c("tomato", "steelblue"),
+                    labels = c("Privé", "Public"),
+                    name = "Secteur") +
+  theme_minimal() +
+  labs(
+    title = "Dispersion des variations d’IVAL selon le secteur",
+    x = "Secteur",
+    y = "Variation de l’IVAL (2016–2024)"
+  )
+
+
+
+library(car)
+
+leveneTest(var_IVAL_1624 ~ factor(secteur_public),
+           data = IVAL_IPS_gt)
+
+```
+
+Je regarde la var des IVAL par département, voir si on a une piste d'explication de la variation ?
+
+```{r}
+var_IVAL_dep <- IVAL_IPS_gt %>%
+  group_by(Département) %>%
+  summarise(
+    moyenne_var_IVAL = mean(var_IVAL_1624, na.rm = TRUE),
+    sd_var_IVAL = sd(var_IVAL_1624, na.rm = TRUE),
+    n_lycees = n()
+  ) %>%
+  arrange(desc(moyenne_var_IVAL))
+
+var_IVAL_dep
+
+
+var_IVAL_dep <- var_IVAL_dep %>%
+  filter(!is.na(Département) & !is.na(moyenne_var_IVAL)) %>%
+  distinct(Département, .keep_all = TRUE)
+
+ggplot(var_IVAL_dep, aes(x =fct_reorder(Département, moyenne_var_IVAL), 
+           y = moyenne_var_IVAL, 
+           fill = moyenne_var_IVAL)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "variation moyenne par departement de l'IVAL",
+    x = "Dept"
+  ) + theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6)  # taille plus petite
+  ) 
+
+departements_sf <- st_read("Carto_France.gpkg", layer = "departement")  
+departements_sf <- departements_sf %>%
+  left_join(var_IVAL_dep, by = c("nom_officiel_en_majuscules" = "Département"))
+
+tm_shape(departements_sf) +
+  tm_fill("moyenne_var_IVAL", palette = "kovesi.blue", style = "quantile") +
+  tm_layout(frame = FALSE)
+
+
+```
+
+
 # 4 Conclusion
 
 Text Text
