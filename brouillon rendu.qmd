@@ -11,8 +11,25 @@ author: "jacopo hilde leopold"
 code-fold: true
 ---
 
-# Introduction
+# 1 Introduction
+
+Le sujet de la mobilité sociale et des inégalités des chances dans l’école est au centre du débat académique en France depuis longtemps. Graduellement, l’analyse sociologique sur le sujet a été intégré dans l’analyse publique au sein de l’INSEE et du ministère de l’Éducation, qui publient régulièrement des rapports, des notes d’information, et collectent des données sur des sujets clés comme les disparités sociales et territoriales dans l’éducation. Par exemple, le rapport annuel « France, portrait sociale » qui est publié depuis 1997 s’occupe régulièrement du thème des inégalités scolaires (e.g., INSEE 1997, INSEE 2003, INSEE 2025). Ainsi, au niveau international, l’OECD dédie régulièrement des chapitres à la mobilité sociale dans l’éducation dans ses rapports du Programme international pour le suivi des acquis des élèves (PISA ; e.g., OECD 2018).
+
+L’indice de position sociale (IPS) pour les écoles en France existe depuis l’année 2016-2017. Il a été créé par la Direction de l'évaluation, de la prospective et de la performance (DEPP) au sein du ministère de l’Éducation. L’indice a été créé comme une tentative d’examiner les inégalités sociales à l’école dans une maniéré plus multiforme (Rochet 2016). Dans le passé, l’origine sociale des élèves a été surtout mesurée à travers la profession et catégorie sociale (PCS) de leurs parents ou le pourcentage d'élèves boursiers dans un établissement, qui rendent une image partielle sur le sujet. En plus, l’indice a l’objectif de créer une mesure quantitative de l’origine sociale, pour permettre plus facilement l’agrégation des données au niveau de l’établissement, de la commune, du département, etc. L’indice regroupe diffèrent catégories de données relatives à la famille d’origine des étudiants, à travers l’analyse en composantes principales. Les catégories incluent : la catégorie socio-professionnelle (PCS) et le niveau d'instruction des parents, la structure familiale (monoparentale, etc.), le conditions matérielles (revenue, taille du logement, accès a internet, etc.), et l’accès à certaines formes de capitale culturelle. Selon les auteurs, l’indice « devrait procurer un avantage pratique selon au moins deux axes d’analyse : décrire les inégalités sociales à l’école ; étudier les relations entre la performance scolaire et l’origine sociale » (Rochet 2016 : 22).
+
+Dans cette analyse, l'IPS sera étudié en relation avec deux autres groupes d'indicateurs pour les lycées : les Indicateurs de Valeur Ajoutée des Lycées (IVAL) et l'indice d’éloignement.
+
+Les IVAL évaluent l'efficacité d'un établissement en mesurant sa capacité à faire progresser ses élèves au-delà des simples taux de réussite bruts au baccalauréat. La « valeur ajoutée » est calculée en comparant les résultats obtenus à ceux attendus, après avoir neutralisé l'influence de facteurs externes tels que le niveau scolaire initial et le profil sociodémographique des élèves, incluant l'IPS. Un indicateur positif signifie que le lycée a mieux accompagné ses élèves que des établissements comparables, mettant ainsi en lumière son action pédagogique propre. Ces indicateurs concernent uniquement les lycées publics et privés sous contrat disposant d'un cycle complet et d'un nombre suffisant de candidats.
+
+L'indice d’éloignement synthétise l'isolement géographique des établissements selon plusieurs dimensions : le lieu de résidence des élèves, l’offre d’enseignement et les équipements aux alentours.
+
+Problèmatique: XXX
+
+# 2 Méthodologie et sources
+
 Text Text
+
+# 3 Analysis
 
 ```{r, eval = FALSE}
 
@@ -264,41 +281,36 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024),
 ```
 # Visualisation des Geodonnees en relation avec l'eloignement
 
-## Indice moyen d'eloignement par Region en 2024 pour toute la France: 
+## Indice moyen d'eloignement par Region en 2024 pour la France metropolitaine et les territoires d'outre-mer
+
 ```{r}
 # Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour toute la France 
 # jsp si on veut garder ca, c'est un peu moche
 
 region_eloi <- region |> select(region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="region")
-tm_shape(region_eloi) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile"))
-```
 
-## Indice moyen d'eloignement par Region en 2024 pour la France metropolitaine: 
-```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) metropol: 
+metropole <- region_eloi |> filter(!code_insee %in% c("01","02","03","04","06"))
+guadeloupe <- region_eloi |> filter(code_insee == "01") # o "971"
+martinique <- region_eloi |> filter(code_insee == "02") # o "972"
+guyane     <- region_eloi |> filter(code_insee == "03") # o "973"
+reunion    <- region_eloi |> filter(code_insee == "04") # o "974"
+mayotte    <- region_eloi |> filter(code_insee == "06") # o "976"
 
-metropole <- region_eloi |> 
-  filter(!code_insee %in% c("01","02","03","04","06"))
 tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
                              fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
+                                                           style="quantile")) + tm_layout(frame=FALSE, component.autoscale = FALSE, fill.legend = tm_title("Moyenne éloignement 2024")) + tm_title ("France métropolitaine", frame = TRUE)
+                                    
+
+m_gua <- tm_shape(guadeloupe) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guadeloupe")
+m_mar <- tm_shape(martinique) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Martinique")
+m_guy <- tm_shape(guyane) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guyane")
+m_reu <- tm_shape(reunion) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Réunion")
+m_may <- tm_shape(mayotte) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Mayotte")
+
+tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 2)
+
 
 ```
-
-## Indice moyen d'eloignement par Region en 2024 pour la France outre mer: 
-```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour la France outre mer 
-
-outremer <- region_eloi |> 
-  filter(code_insee %in% c("01","02","03","04","06"))
-tm_shape(outremer) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile")) + tm_layout(frame =FALSE, component.autoscale = FALSE)
-
-```
-
 
 # IVAL
 
@@ -346,3 +358,35 @@ IPS_acad <- IVAL_IPS_gt %>%
 IPS_acad %>% ggplot(aes(x=fct_reorder(Académie,IPS_moyen), y=IPS_moyen, fill=IPS_moyen)) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+# 4 Conclusion
+
+Text Text
+
+# Bibliographie
+
+## Articles et rapports
+
+Insee. (1998). France, portrait social. Consulté le 10 décembre 2025 sur https://www.bnsp.insee.fr/ark:/12148/bpt6k6475495h/f5
+
+Insee. (2003). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/1371826
+
+Insee. (2025). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/8612596
+
+OECD. (2018). Can equity in education foster social mobility? PISA, OECD Publishing. https://doi.org/10.1787/9789264307230-en
+
+Rocher, T. (2016). Construction d'un indice de position sociale des élèves. Éducation & Formations, (90), 5–27. https://doi.org/10.48464/ef-90-01
+
+## Jeux de données
+
+Institut national de l’information géographique et forestière (IGN). (2025). ADMIN-EXPRESS, édition Décembre 2025 France entière [Jeu de données géographiques]. Disponibles sur https://geoservices.ign.fr/adminexpress
+
+Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées (2016-2021) [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips_lycees
+
+Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées - Année scolaire 2022-2023 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2022
+
+Ministère de l’éducation nationale. (2024). Indices de position sociale des lycées - Année scolaire 2023-2024 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2023
+
+Ministère de l’éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées d'enseignement général et technologique  [Jeu de données]. https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-gt_v2
+
+Ministère de l’Éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées professionnels [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-pro_v2
+
