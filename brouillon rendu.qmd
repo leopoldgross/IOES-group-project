@@ -23,11 +23,17 @@ Les IVAL évaluent l'efficacité d'un établissement en mesurant sa capacité à
 
 L'indice d’éloignement synthétise l'isolement géographique des établissements selon plusieurs dimensions : le lieu de résidence des élèves, l’offre d’enseignement et les équipements aux alentours.
 
-Problèmatique: XXX
+À partir de ces trois indicateurs, cette analyse a pour objectif d'explorer dans quelle mesure l’indice de position sociale (IPS) et l’éloignement géographique conditionnent la performance des différents lycées, publics et privés, au sein des départements français. De plus, la recherche examine dans quelle proportion l'IVAL permet de compenser ces déterminants sociaux, en étudiant en particulier les effets de la réforme du baccalauréat. 
 
 # 2 Méthodologie et sources
 
-Text Text
+Cette étude s’appuie sur trois sources de données publiées par le ministère de l'Éducation nationale : l'indice de position sociale (IPS), les indicateurs de valeur ajoutée des lycées (IVAL) et l'indice d'éloignement. Le logiciel R a été utilisé pour l'ensemble de l'analyse statistique et de la production du rapport.
+
+L'IPS, mesuré depuis 2016, a été extrait de trois bases de données distinctes, unifiées pour les besoins de l'analyse. Les données de l'IVAL, disponibles depuis 2013, distinguent les lycées d'enseignement général et technologique (GT) des lycées professionnels. Enfin, les données sur l'éloignement sont accessibles pour la période allant de 2020 à 2024. Afin de standardiser les résultats, ce travail se concentre exclusivement sur les établissements d'enseignement général et technologique. Les années scolaires 2016-2017, 2020-2021 et 2023-2024 ont été isolées pour faire l'objet d'un examen approfondi. Un travail préparatoire a été nécessaire pour traiter les données manquantes et harmoniser les noms des départements et des communes afin de permettre la représentation cartographique.
+
+À partir de ces sources, l'analyse mobilise diverses méthodes statistiques pour appréhender les dynamiques sociales des lycées français. Dans un premier temps, des régressions linéaires sont exploitées pour tester l'influence de l'IPS sur l'IVAL et comparer les secteurs public et privé. Ensuite, via des outils de statistique descriptive et de cartographie, la recherche explore les disparités territoriales liées à l'éloignement. Enfin, l'impact de la réforme du baccalauréat est évalué à travers l'évolution de l'IVAL entre 2016 et 2024.
+
+Pour conclure, une note méthodologique sur l'usage de l'IA. Des outils d'intelligence artificielle générative (LLM) ont été utilisés pour la rédaction du code R de cette analyse. En particulier, l'IA a été exploitée pour corriger le code en cas d'erreurs et pour améliorer l'apparence des graphiques et des cartographies. L'utilisation de l'IA a toujours été faite avec un regard critique et analytique, en vérifiant manuellement le code à chaque fois.
 
 # 3 Analysis
 
