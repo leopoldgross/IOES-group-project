@@ -369,6 +369,26 @@ print(round(lycees_pca$eig[1:5, 3], 2))
 
 # Eloignement
 
+## Indice moyen d'éloignement par region et par académie pour 2024
+```{r}
+
+# Indice moyen d'éloignement par region pour 2024 ?
+
+Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(region="Region") 
+  
+ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024), 
+           y = moyenne_eloignement_2024, 
+           fill = moyenne_eloignement_2024)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Indice moyen d'éloignement par region (2024)",
+    x = "Region",
+    y = "Indice moyen"
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
 ```{r}
 
 # Indice moyen d'éloignement par académie pour 2024 ?
@@ -389,56 +409,16 @@ ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024),
 
 ```
 
-```{r}
+L'analyse au niveau régional et d'académie montre une différence de plus de 20 % entre les territoires présentant les niveaux d'éloignement les plus faibles et ceux présentant les niveaux les plus élevés. 
 
-# Indice moyen d'éloignement par region pour 2024 ?
+En particulier, l'Île-de-France est la région où l'éloignement est le moins présent, ce qui se reflète également au niveau des académies, Paris, Créteil et Versailles occupant les premières places en termes de faibles niveaux d'éloignement. Cela n'a rien d'étonnant, car l'Île-de-France est la région la plus urbanisée de France, avec une forte densité de population, un réseau de transports très développé et des services publics et des écoles répartis sur un territoire relativement restreint. L'ensemble de ces éléments facilite l'accès à l'éducation pour les jeunes qui résident dans cette région. 
 
-Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(region="Region") 
-  
-ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024), 
-           y = moyenne_eloignement_2024, 
-           fill = moyenne_eloignement_2024)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(
-    title = "Indice moyen d'éloignement par region (2024)",
-    x = "Region",
-    y = "Indice moyen"
-  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+Confirmant le fait que le taux d'urbanisation semble positivement corrélé à de faibles niveaux d'éloignement, les autres académies hors Île-de-France où l'indice est le plus faible sont Lyon, Strasbourg, Lille, et Aix-Marseille. Toutes des zones urbanisées comprenant des villes moyennes ou grandes. Dans le même temps, la présence d'une grande ville ne suffit pas à elle seule à réduire l'éloignement : par exemple, les académies de Toulouse et de Bordeaux ont des niveaux relativement élevés par rapport à la moyenne, même en présence de centres urbains importants, ce qui montre que l'accès à l'éducation dépend de nombreux facteurs. En outre, il convient de mentionner que la plupart des régions et des académies de France métropolitaine ont des niveaux d'éloignement relativement similaires, même dans les territoires où la densité de population est faible.
 
-```
+La situation est différente pour la Corse, la Guyane et la Guadeloupe, qui se distinguent par des niveaux d'éloignement largement supérieurs à la moyenne, tant au niveau des académies que des régions. Cela semble témoigner de la difficulté du système éducatif français à garantir les mêmes droits d'accès à l'éducation en dehors de la France métropolitaine.
+
 # Visualisation des Geodonnees en relation avec l'eloignement
 
-## Indice moyen d'eloignement par Region en 2024 pour la France metropolitaine et les territoires d'outre-mer
-
-```{r}
-# Indice moyen d'eloignement par Region pour 2024 (geoplot) - pour toute la France 
-# jsp si on veut garder ca, c'est un peu moche
-
-region_eloi <- region |> select(region, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Reg, by="region")
-
-metropole <- region_eloi |> filter(!code_insee %in% c("01","02","03","04","06"))
-guadeloupe <- region_eloi |> filter(code_insee == "01") # o "971"
-martinique <- region_eloi |> filter(code_insee == "02") # o "972"
-guyane     <- region_eloi |> filter(code_insee == "03") # o "973"
-reunion    <- region_eloi |> filter(code_insee == "04") # o "974"
-mayotte    <- region_eloi |> filter(code_insee == "06") # o "976"
-
-tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile")) + tm_layout(frame=FALSE, component.autoscale = FALSE, fill.legend = tm_title("Moyenne éloignement 2024")) + tm_title ("France métropolitaine", frame = TRUE)
-                                    
-
-m_gua <- tm_shape(guadeloupe) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guadeloupe")
-m_mar <- tm_shape(martinique) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Martinique")
-m_guy <- tm_shape(guyane) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guyane")
-m_reu <- tm_shape(reunion) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Réunion")
-m_may <- tm_shape(mayotte) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Mayotte")
-
-tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 2)
-
-
-```
 ## Indice moyen d'eloignement par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
 
 ```{r}
