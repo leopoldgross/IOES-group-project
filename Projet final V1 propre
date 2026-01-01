@@ -1,0 +1,660 @@
+---
+title: "Projet final - "
+format: pdf 
+editor: visual
+author: "Jacopo Caja, Hilde Teichgraber, Léopold Gross"
+code-fold: true
+execute:
+  warning: false
+  message: false
+---
+
+# 1 Introduction
+
+Le sujet de la mobilité sociale et des inégalités des chances dans l’école est au centre du débat académique en France depuis longtemps. Graduellement, l’analyse sociologique sur le sujet a été intégré dans l’analyse publique au sein de l’INSEE et du ministère de l’Éducation, qui publient régulièrement des rapports, des notes d’information, et collectent des données sur des sujets clés comme les disparités sociales et territoriales dans l’éducation. Par exemple, le rapport annuel « France, portrait sociale » qui est publié depuis 1997 s’occupe régulièrement du thème des inégalités scolaires (e.g., INSEE 1997, INSEE 2003, INSEE 2025). Ainsi, au niveau international, l’OECD dédie régulièrement des chapitres à la mobilité sociale dans l’éducation dans ses rapports du Programme international pour le suivi des acquis des élèves (PISA ; e.g., OECD 2018).
+
+L’indice de position sociale (IPS) pour les écoles en France existe depuis l’année 2016-2017. Il a été créé par la Direction de l'évaluation, de la prospective et de la performance (DEPP) au sein du ministère de l’Éducation. L’indice a été créé comme une tentative d’examiner les inégalités sociales à l’école dans une maniéré plus multiforme (Rochet 2016). Dans le passé, l’origine sociale des élèves a été surtout mesurée à travers la profession et catégorie sociale (PCS) de leurs parents ou le pourcentage d'élèves boursiers dans un établissement, qui rendent une image partielle sur le sujet. En plus, l’indice a l’objectif de créer une mesure quantitative de l’origine sociale, pour permettre plus facilement l’agrégation des données au niveau de l’établissement, de la commune, du département, etc. L’indice regroupe diffèrent catégories de données relatives à la famille d’origine des étudiants, à travers l’analyse en composantes principales. Les catégories incluent : la catégorie socio-professionnelle (PCS) et le niveau d'instruction des parents, la structure familiale (monoparentale, etc.), le conditions matérielles (revenue, taille du logement, accès a internet, etc.), et l’accès à certaines formes de capitale culturelle. Selon les auteurs, l’indice « devrait procurer un avantage pratique selon au moins deux axes d’analyse : décrire les inégalités sociales à l’école ; étudier les relations entre la performance scolaire et l’origine sociale » (Rochet 2016 : 22).
+
+Dans cette analyse, l'IPS sera étudié en relation avec deux autres groupes d'indicateurs pour les lycées : les Indicateurs de Valeur Ajoutée des Lycées (IVAL) et l'indice d’éloignement.
+
+Les IVAL évaluent l'efficacité d'un établissement en mesurant sa capacité à faire progresser ses élèves au-delà des simples taux de réussite bruts au baccalauréat. La « valeur ajoutée » est calculée en comparant les résultats obtenus à ceux attendus, après avoir neutralisé l'influence de facteurs externes tels que le niveau scolaire initial et le profil sociodémographique des élèves, incluant l'IPS. Un indicateur positif signifie que le lycée a mieux accompagné ses élèves que des établissements comparables, mettant ainsi en lumière son action pédagogique propre. Ces indicateurs concernent uniquement les lycées publics et privés sous contrat disposant d'un cycle complet et d'un nombre suffisant de candidats.
+
+L'indice d’éloignement synthétise l'isolement géographique des établissements selon plusieurs dimensions : le lieu de résidence des élèves, l’offre d’enseignement et les équipements aux alentours.
+
+Cette courte analyse a pour objectif de faire un état des lieux de ce que nous montrent ces différents indicateurs en termes de dispartiés régionales, puis s'intérrogent sur les caractéristiques qui peuvent jouer sur la valeur ajoutée des lycées.
+# 2 Méthodologie et sources
+
+Cette étude s’appuie sur trois sources de données publiées par le ministère de l'Éducation nationale : l'indice de position sociale (IPS), les indicateurs de valeur ajoutée des lycées (IVAL) et l'indice d'éloignement. Le logiciel R a été utilisé pour l'ensemble de l'analyse statistique et de la production du rapport.
+
+L'IPS, mesuré depuis 2016, a été extrait de trois bases de données distinctes, unifiées pour les besoins de l'analyse. Les données de l'IVAL, disponibles depuis 2013, distinguent les lycées d'enseignement général et technologique (GT) des lycées professionnels. Enfin, les données sur l'éloignement sont accessibles pour la période allant de 2020 à 2024. Afin de standardiser les résultats, ce travail se concentre exclusivement sur les établissements d'enseignement général et technologique. Les années scolaires 2016-2017, 2020-2021 et 2023-2024 ont été isolées pour faire l'objet d'un examen approfondi. Un travail préparatoire a été nécessaire pour traiter les données manquantes et harmoniser les noms des départements et des communes afin de permettre la représentation cartographique.
+
+À partir de ces sources, l'analyse mobilise diverses méthodes statistiques pour appréhender les dynamiques sociales des lycées français. Via des outils de statistique descriptive et de cartographie, la recherche explore les disparités territoriales liées à l'éloignement. Enfin, l'impact de la réforme du baccalauréat est évalué à travers l'évolution de l'IVAL entre 2016 et 2024.
+
+Des outils d'intelligence artificielle générative (LLM) ont été utilisés pour la rédaction du code R de cette analyse. En particulier, l'IA a été exploitée pour corriger le code en cas d'erreurs et pour améliorer l'apparence des graphiques et des cartographies. L'utilisation de l'IA a toujours été faite avec un regard critique et analytique, en vérifiant manuellement le code à chaque fois.
+
+# 3 Analysis
+
+```{r, echo = FALSE, message = FALSE}
+#| message: false
+
+rm(list=ls(all=TRUE))
+library(ggplot2)
+library(vroom)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(here)
+library(plotly)
+library(here)
+library(tidyverse)
+library(cartogram)
+library(sf)
+library(tidyverse)
+library(spData)
+library(tmap)
+library(cartogram)
+library(reshape2) 
+library(corrplot)
+library(factoextra)
+library(FactoMineR)
+
+# Importation des donnees:
+here::i_am("M2SES.Rproj")
+
+Annuaire <- vroom("fr-en-annuaire-education.csv")
+ParcourSup <- vroom("fr-esr-parcoursup.csv")
+Eloignement <- vroom("fr-en-indice_eloignement_lycee_ap2020.csv")
+
+IPS <- vroom("fr-en-ips_lycees.csv")
+IPS_2022_2023 <- vroom("fr-en-ips-lycees-ap2022.csv")
+IPS_2023_2024 <- vroom("fr-en-ips-lycees-ap2023.csv")
+
+IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+# les données pour le Geoplot selon les regions
+st_layers("France_entiere.gpkg")
+region <- st_read("France_entiere.gpkg", layer="region")
+region <- region |> rename(region="nom_officiel_en_majuscules")
+
+# les données pour le Geoplot selon les communes.
+st_layers("Carto_France.gpkg")
+communes <- st_read("Carto_France.gpkg", layer="commune")
+communes <- communes |> rename(commune="nom_officiel_en_majuscules")
+
+# Nous choissisons de garder 3 annnées à comparer à, avec 4 années d'écart 
+#à chaque fois. La réforme du bac intervient en 2021.
+#Les données d'éloignement commencçent en 2020.
+
+IVAL_gt <-IVAL_gt %>% filter(Année == 2016 | Année==2020 | Année==2024)
+
+#faire pivoter les IVAL pour les avoir en colonne et se débarraser des lignes par années.
+
+IVAL_gt <- IVAL_gt %>% rename(IVAL = `Valeur ajoutée du taux de réussite - Toutes séries`) 
+
+IVAL_gt <- IVAL_gt %>% select(UAI, Année, IVAL, Secteur, `Taux d'accès 2nde-bac`, `Taux de réussite - Toutes séries`) %>%
+  mutate(secteur_public = if_else(Secteur == "public", 1, 0)) %>% select(-Secteur) %>%
+    pivot_wider(names_from = Année, values_from = c(IVAL, `Taux d'accès 2nde-bac`, `Taux de réussite - Toutes séries` ),
+    names_glue = "{.value}_{Année}")
+
+#Pareil pour l'éloignement
+
+Eloignement <- Eloignement %>% filter(Année=="2020" | Année=="2024" ) %>%  select(UAI, Année, `Indice éloignement` ) %>% pivot_wider(names_from = Année, values_from = `Indice éloignement`, names_glue = "{.value}_{Année}") 
+
+
+# Unifier le tables IPS
+IPS_pivot_2016 <- IPS |> select(`Rentrée scolaire`, UAI, `IPS voie GT`, Secteur) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
+
+IPS_pivot_2022 <- IPS_2022_2023 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
+
+IPS_pivot_2024 <- IPS_2023_2024 |> select(`Rentrée scolaire`, UAI, `IPS voie GT`) |>
+  pivot_wider(id_cols = UAI, names_from = 'Rentrée scolaire',
+              values_from = 'IPS voie GT', , names_prefix = "IPS ")
+
+
+IPS_gt <- IPS_pivot_2016 |> left_join(IPS_pivot_2022) |> left_join(IPS_pivot_2024) |> filter(!is.na(`IPS 2016-2017`)) %>% select(`IPS 2016-2017`, `IPS 2020-2021`,`IPS 2024-2025`, UAI )
+
+
+
+#On peut désormais joindre les données en un seul grand tibble.
+IVAL_IPS_gt <- inner_join(IVAL_gt,IPS_gt, by = "UAI")
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(Eloignement, by = "UAI")
+
+
+#On va maintenant remettre les informations géographiques des lycées qu'on avait fait tomber (car elles causaient des doublons.)
+IVAL_gt <- vroom("fr-en-indicateurs-de-resultat-des-lycees-gt_v2.csv")
+
+IVAL_gt <- IVAL_gt %>% 
+  filter(Année %in% c(2016, 2020, 2024)) %>% 
+  select(UAI, Region, Département, Académie, Commune, `Code commune`) %>% 
+  distinct(UAI, .keep_all = TRUE)
+
+#on s'assure de ne pas avoir de doublons.
+IVAL_gt %>%
+  count(UAI) %>%
+  filter(n > 1)
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>% inner_join(IVAL_gt, by = "UAI")
+
+rm(Annuaire, Eloignement,IVAL_gt,IPS_gt,IPS_pivot_2024,IPS_pivot_2022,IPS_pivot_2016,Eloignement,IPS_2023_2024,IPS_2022_2023,IPS)
+
+
+
+```
+
+
+Nous proposons de commencer par établir quelques statistiques déscriptives, à plusieurs échelles, sur nos variables d'intérêts.
+
+# Eloignement
+
+## Indice moyen d'éloignement par region et par académie pour 2024
+```{r}
+#| message: false
+
+# Indice moyen d'éloignement par region pour 2024 
+
+Eloi2024_Reg <- IVAL_IPS_gt |> group_by(Region)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(region="Region") 
+  
+ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024), 
+           y = moyenne_eloignement_2024, 
+           fill = moyenne_eloignement_2024)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Indice moyen d'éloignement par region (2024)",
+    x = "Region",
+    y = "Indice moyen"
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  labs(fill = NULL)
+
+```
+
+
+Au niveau régional il existe une différence de plus de 20 % entre les territoires présentant les niveaux d'éloignement les plus faibles et ceux présentant les niveaux les plus élevés. 
+
+En particulier, l'Île-de-France est la région où l'éloignement est le moins présent, ce qui se reflète également au niveau des académies, Paris, Créteil et Versailles occupant les premières places en termes de faibles niveaux d'éloignement. Cela n'a rien d'étonnant, car l'Île-de-France est la région la plus urbanisée de France, avec une forte densité de population, un réseau de transports très développé et des services publics et des écoles répartis sur un territoire relativement restreint. L'ensemble de ces éléments facilite l'accès à l'éducation pour les jeunes qui résident dans cette région. 
+
+Confirmant le fait que le taux d'urbanisation semble positivement corrélé à de faibles niveaux d'éloignement, les autres académies hors Île-de-France où l'indice est le plus faible sont Lyon, Strasbourg, Lille, et Aix-Marseille. Toutes des zones urbanisées comprenant des villes moyennes ou grandes. Dans le même temps, la présence d'une grande ville ne suffit pas à elle seule à réduire l'éloignement : par exemple, les académies de Toulouse et de Bordeaux ont des niveaux relativement élevés par rapport à la moyenne, même en présence de centres urbains importants, ce qui montre que l'accès à l'éducation dépend de nombreux facteurs. En outre, il convient de mentionner que la plupart des régions et des académies de France métropolitaine ont des niveaux d'éloignement relativement similaires, même dans les territoires où la densité de population est faible.
+
+La situation est différente pour la Corse, la Guyane et la Guadeloupe, qui se distinguent par des niveaux d'éloignement largement supérieurs à la moyenne, tant au niveau des académies que des régions. Cela semble témoigner de la difficulté du système éducatif français à garantir les mêmes droits d'accès à l'éducation en dehors de la France métropolitaine.
+
+# Visualisation des Geodonnees en relation avec l'eloignement
+
+## Indice moyen d'eloignement par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
+
+```{r} 
+#| message: false
+
+Eloi2024_Dep <- IVAL_IPS_gt |> group_by(Département)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(Département="Département") 
+
+departement <- st_read("France_entiere.gpkg", layer="departement")
+departement <- departement |> rename(Département="nom_officiel_en_majuscules")
+
+departement <- departement |> 
+  mutate(Département = case_when(
+      Département == "ALPES-DE-HAUTE-PROVENCE" ~ "ALPES-DE-HTE-PROVENCE",
+      Département == "HAUTE-SAVOIE" ~ "HAUTE SAVOIE",
+      Département == "COTE-D'OR" ~ "COTE D'OR", 
+      Département == "COTES-D'ARMOR" ~ "COTES D'ARMOR",
+      Département == "SEINE-MARITIME" ~ "SEINE MARITIME",
+      TRUE ~ Département))
+
+
+departement_eloi <- departement |> select(Département, code_insee, code_siren, geometrie) |> right_join(Eloi2024_Dep, by="Département")
+
+metropole <- departement_eloi |> filter(!grepl("^97", code_insee))
+guadeloupe <- departement_eloi |> filter(code_insee == "971")
+martinique <- departement_eloi |> filter(code_insee == "972")
+guyane     <- departement_eloi |> filter(code_insee == "973")
+reunion    <- departement_eloi |> filter(code_insee == "974")
+mayotte    <- departement_eloi |> filter(code_insee == "976")
+
+tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
+                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
+                                                           style="quantile"),
+                              fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_layout(frame=FALSE, component.autoscale = FALSE) + tm_title ("France métropolitaine", frame = TRUE) +
+  tm_borders(col = "darkblue", lwd = 0.3)
+                                    
+
+m_gua <- tm_shape(guadeloupe) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guadeloupe") + tm_borders(col = "darkblue", lwd = 0.3)
+m_mar <- tm_shape(martinique) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Martinique") + tm_borders(col = "darkblue", lwd = 0.3)
+m_guy <- tm_shape(guyane) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guyane") + tm_borders(col = "darkblue", lwd = 0.3)
+m_reu <- tm_shape(reunion) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Réunion") + tm_borders(col = "darkblue", lwd = 0.3)
+m_may <- tm_shape(mayotte) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Mayotte") + tm_borders(col = "darkblue", lwd = 0.3)
+
+tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 1)
+```
+
+# IVAL
+
+```{r}
+#| message: false
+
+ival_dep <- IVAL_IPS_gt |>
+  mutate(
+    Département = toupper(trimws(Département)),
+    Département = gsub("’", "'", Département),
+
+    Département = dplyr::recode(
+      Département,
+      "ALPES-DE-HTE-PROVENCE" = "ALPES-DE-HAUTE-PROVENCE",
+      "COTE D'OR"             = "COTE-D'OR",
+      "COTES D'ARMOR"         = "COTES-D'ARMOR",
+      "HAUTE SAVOIE"          = "HAUTE-SAVOIE",
+      "SEINE MARITIME"        = "SEINE-MARITIME",
+      "LA REUNION"            = "LA RÉUNION"
+    )
+  ) %>% 
+  group_by(Département) |>
+  summarise(
+    moyenne_IVAL_2016 = mean(`IVAL_2016`, na.rm = TRUE), 
+    moyenne_IVAL_2024 = mean(`IVAL_2024`, na.rm = TRUE))
+
+departements_sf <- st_read("Carto_France.gpkg", layer = "departement") |>
+  rename(Département = nom_officiel_en_majuscules)
+
+departements_sf <- departements_sf |>
+  left_join(ival_dep, by = "Département")
+
+
+tm_shape(departements_sf) +
+  tm_fill(
+    "moyenne_IVAL_2024",
+    fill.scale = tm_scale_intervals(
+      style = "quantile",
+      values = "kovesi.blue"
+    ),
+    fill.legend = tm_legend(title = "IVAL moyen (2024)")
+  ) +
+  tm_layout(frame = FALSE)
+```
+On semble constater un certain regroupement de départements dont l'IVAL des lycées est inférieur en moyenne à -1,2 en Bourgogne Franche-Comté et au Nord de la France.
+# Public et privé
+
+Nous proposons quelques autres statistiques déscriptives de nos variables d'intérêt, par académies.
+
+```{r}
+#| message: false
+
+
+# nombre de lycées privés par académie.
+
+priv_acad <- IVAL_IPS_gt %>%
+  filter(secteur_public == 0) %>%         
+  group_by(Académie) %>%
+  summarise(nb_prives = n()) 
+
+ggplot(priv_acad, aes(x=fct_reorder(Académie,nb_prives), y=nb_prives, fill=nb_prives)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  labs(
+    x = "Académie",
+    y = "Nombre de lycées privés",
+    fill = NULL)
+
+```
+Les académies françaises sont très hétérogènes dans leur quantité de lycées privés. Cette disparité peut être une première explication de la différence de réussite entre les académies.
+
+
+
+```{r}
+#| message: false
+
+
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>%
+  mutate(IPS_moy_lycee = rowMeans(
+    select(., `IPS 2016-2017`, `IPS 2020-2021`, `IPS 2024-2025`),
+    na.rm = TRUE
+  ))
+
+IPS_acad <- IVAL_IPS_gt %>%
+  group_by(Académie) %>%
+  summarise(IPS_moyen = mean(IPS_moy_lycee, na.rm = TRUE))
+
+IPS_acad %>% ggplot(aes(x=fct_reorder(Académie,IPS_moyen), y=IPS_moyen, fill=IPS_moyen)) + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  labs(
+    x = "Académie",
+    y = "IPS moyen de l'académie",
+    fill = NULL)
+
+```
+On constate que les départements outre-mer sont tous les plus défavorisés en termes de position sociale, tantdis que la Paris et Versailles ressortent du lot avec une position sociale moyenne plus élevée.
+
+# Analyse de l'IVAL.
+
+Nous proposons de débuter avec une intuition qui a été la notre : 
+si l'IVAL est positivement corrélé à l'IPS, cela veut dire que l'effet positif, isolé, du lycée sur la réussite de ses élèves est malgré tout corrélé à la condition sociale des élèves qui le fréquentent. Autrement dit, l'effet positif du lycée, sans prendre en compte le niveau des élèves, donc par exemple la qualité des enseignants, la qualité du matériel, de l'accompagnement proposé, du CDI etc pourrait être la meilleure là ou les élèves ont la meilleure condition sociale.
+
+Nous proposons une simple régression linéaire sur l'année 2020 pour vérifier l'existence d'un lien statistique.
+
+```{r}
+#| message: false
+
+
+
+reg1_2020 <- lm(
+  `IVAL_2020` ~ 
+    `Indice éloignement_2020` + secteur_public + `IPS 2020-2021`,
+  data = IVAL_IPS_gt
+)
+
+summary(reg1_2020)
+```
+Premier résultat : cette régression n'explique pas l'IVAL. L'IVAL est bien corrigé de l'IPS (on ne trouve pas un IVAL meilleur là où il y a des IPS élevés, même après correction), l'éloignement n'a pas d'effet sur l'IVAL. Le fait d'être un lycée public a un léger effet negatif.
+
+
+
+```{r}
+#| message: false
+
+
+#On propose donc une seconde régression, classique, du taux de réussite 
+#expliqué par l'éloignement, le secteur et l'IPS.
+reg2_2020 <- lm(
+  `Taux de réussite - Toutes séries_2020` ~ 
+    `Indice éloignement_2020` + secteur_public + `IPS 2020-2021`,
+  data = IVAL_IPS_gt
+)
+
+summary(reg2_2020)
+
+```
+
+Second résultat : plus d'un tiers de la variation du taux de réussite (en 2020, bac général) est expliquée par IPS + eloignement + secteur. On remarque un effet positif de l'IPS et de l'éloignement (effets robustes mais légers), et un effet négatif du secteur public. (effet plus fort et robuste). On confirme donc l'état des lieux standard qui est donné sur l'éducation secondaire en France : les lycées publics ont de moins bons résultats que les lycées privés, et une meilleure position sociale moyenne amène à de meilleurs résultats.
+
+
+# Effet égalisateur de la réforme du bac.
+
+Nous avons pu vérifier que l'IVAL était bien corrigé de l'IPS, mais nous avons pu constater des dispartiés géographiques de l'IVAL. 
+Dans cette partie, nous allons nous intérroger sur l'effet qu'à pu avoir la réforme du BAC de 2021 en France sur l'IVAL.
+
+
+```{r}
+#| message: false
+
+
+
+IVAL_distrib <- IVAL_IPS_gt %>%
+  select(IVAL_2016, IVAL_2024) %>%
+  pivot_longer(cols = everything(), names_to = "annee", values_to = "IVAL")
+
+ggplot(IVAL_distrib, aes(x = IVAL, fill = annee)) +
+  geom_density(alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_fill_manual(values = c("steelblue", "tomato")) +
+  labs(
+    title = "Comparaison des distributions de l’IVAL : 2016 vs 2024",
+    x = "IVAL",
+    y = "Distribution",
+    fill = "Année"
+  )
+```
+Ce graphique permet de constater que la distribution des IVAL après la réforme du BAC est plus resserée autour de 0, c'est-à-dire qu'il existe moins d'écarts (positifs comme négatifs) à l'effet moyen du lycée sur la réussite des élèves. Autrement dit, moins de lycées ont un effet différent de la moyenne. On peut donc supposer que le niveau des lycées s'est en partie uniformisé, ce qui ne permet pas toutefois de conclure sur un meilleur ou moins bon niveau général des lycées.
+
+
+Examinons si l'effet est différencié selon le secteur.
+Pour cela, nous allons calculer la variation de l'IVAL entre 2016 et 2024, avec une simple différence. Nous choissisons 2016, plus éloignée de la réforme de 2021 que l'année 2020 car l'année 2020 comporte un biais majeur dans son IVAL qui est la pandémie de la  Covid-19. La génération d'élèves en classe de Terminale en 2020 n'a pas passé le bac à proprement parler, les notes ont été décidées par les enseignants en fonction du niveau de l'élève sur l'année.
+
+```{r}
+#| message: false
+
+
+
+#Nous calculons la variation de l'IVAL de chaque lycée, avant et après la réforme du bac, et l'IPS moyen du lycée sur les 3 années.
+
+IVAL_IPS_gt <- IVAL_IPS_gt %>%
+  mutate(var_IVAL_1624 = IVAL_2024 - IVAL_2016) %>%
+  mutate(IPS_moy_lycee = rowMeans(
+    select(., `IPS 2016-2017`, `IPS 2020-2021`, `IPS 2024-2025`),
+    na.rm = TRUE
+  ))
+
+
+  var_IVAL_privés <- ggplot(IVAL_IPS_gt %>% filter(secteur_public == 0),
+       aes(x =IPS_moy_lycee , y = var_IVAL_1624)) +
+  geom_point(alpha = 0.6, size = 2, color = "tomato") +
+  theme_minimal() +
+  labs(
+    title = "Variation des IVAL - Lycées privés",
+    x = "IPS moyen du lycée",
+    y = ""
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkgrey",
+              linetype = "dashed") +
+  theme(plot.title = element_text(size = 10))
+
+  
+  
+  
+var_IVAL_publics <- ggplot(IVAL_IPS_gt %>% filter(secteur_public == 1),
+       aes(x = IPS_moy_lycee, y = var_IVAL_1624)) +
+  geom_point(alpha = 0.6, size = 2, color = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Variation des IVAL - Lycées publics",
+    x = "IPS moyen",
+    y = "Variation de l'ival 2016 - 2024"
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkgrey", 
+              linetype = "dashed") +
+  theme(plot.title = element_text(size = 10))
+
+library(patchwork)
+
+var_IVAL_publics + var_IVAL_privés
+
+
+```
+
+Les graphiques donnent l'impression visuelle que l'IVAL a plus varié dans les lycées publics que dans les lycées privés.
+Vérifions cette observation.
+
+```{r}
+#| message: false
+
+
+ggplot(IVAL_IPS_gt, aes(x = factor(secteur_public),
+                        y = var_IVAL_1624,
+                        fill = factor(secteur_public))) +
+  geom_boxplot(alpha = 0.6, outlier.alpha = 0.4) +
+  scale_fill_manual(values = c("tomato", "steelblue"),
+                    labels = c("Privé", "Public"),
+                    name = "Secteur") +
+  theme_minimal() +
+  labs(
+    title = "Dispersion des variations d’IVAL selon le secteur",
+    x = "Secteur",
+    y = "Variation de l’IVAL (2016–2024)"
+  )
+
+```
+Les boites à moustaches confirment que le secteur public a connu une variation plus importante de ses IVAL.
+
+Nous allons désormais voir si le niveau initial de l'IVAL moyen d'un département est un élément explicatif de la variation qu'on y observe depuis la réforme.
+
+```{r}
+#| message: false
+
+
+var_IVAL_dep <- IVAL_IPS_gt %>%
+  group_by(Département) %>%
+  summarise(
+    moyenne_var_IVAL = mean(var_IVAL_1624, na.rm = TRUE),
+    sd_var_IVAL = sd(var_IVAL_1624, na.rm = TRUE),
+    n_lycees = n()
+  ) %>%
+  arrange(desc(moyenne_var_IVAL))
+
+var_IVAL_dep <- var_IVAL_dep %>%
+  filter(!is.na(Département) & !is.na(moyenne_var_IVAL)) %>%
+  distinct(Département, .keep_all = TRUE)
+
+ival_dep <- IVAL_IPS_gt |>
+  group_by(Département) |>
+  summarise(
+    moyenne_IVAL_2016 = mean(`IVAL_2016`, na.rm = TRUE)
+  )
+
+ival_dep <- ival_dep %>% left_join(var_IVAL_dep, by ="Département") 
+
+
+ggplot(ival_dep, aes(x = moyenne_IVAL_2016, y = moyenne_var_IVAL)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(
+    x = "IVAL moyen en 2016",
+    y = "Variation IVAL 2016 - 2024",
+    title = "Relation entre niveau initial et progression de l'IVAL"
+  )
+```
+On trouve qu'il existe une relation très claire entre l'Ival moyen initial d'un département en 2016 et sa variation jusqu'à sa valeur de 2024. Les départements avec un ival moyen bas ont connu une variation plus positive. Ce résultat vient confirmer à nouveau la possibilité d'un effet égalisateur de la réforme du bac.
+
+Géographiquement : 
+
+```{r}
+#| message: false
+
+
+
+departements_sf <- departements_sf %>%
+  left_join(var_IVAL_dep, by = c("Département" = "Département"))
+
+c1 <- tm_shape(departements_sf) +
+  tm_fill("moyenne_var_IVAL", palette = "kovesi.blue", style = "quantile",
+          title = "variation moyenne de l'IVAL 2016-2024") +
+  tm_layout(frame = FALSE)
+
+
+ival_dep <- ival_dep %>% left_join(var_IVAL_dep, by ="Département") 
+
+c2 <- tm_shape(departements_sf) +
+  tm_fill("moyenne_IVAL_2016",
+          palette = "kovesi.blue",
+          style = "quantile",
+          title = "IVAL moyen (2016)") +
+  tm_layout(frame = FALSE)
+
+tmap_arrange(c2,c1, ncol = 2)
+
+
+```
+
+
+Nous proposons une analyse en composantes principales pour examiner à plat toutes les pistes de corrélations possibles.
+
+# Analyse en composantes principales. 
+
+```{r}
+#| message: false
+
+
+
+# Préparer les données pour l'ACP
+# Identifier les colonnes qualitatives (géographiques)
+cols_quali <- c("Region", "Département", "Académie", "Commune", "Code commune")
+
+# Identifier la position de secteur_public et des colonnes qualitatives
+data_acp_full <- IVAL_IPS_gt %>%
+  select(-UAI) %>%
+  na.omit()
+
+# Trouver les indices des colonnes
+idx_secteur <- which(names(data_acp_full) == "secteur_public")
+idx_quali <- which(names(data_acp_full) %in% cols_quali)
+
+cat("Dimensions des données:", dim(data_acp_full), "\n")
+cat("Colonne secteur_public:", idx_secteur, "\n")
+cat("Colonnes qualitatives:", idx_quali, "\n")
+
+
+# On ne séléctionne que que les variables quantitatives actives
+data_quanti <- data_acp_full %>% 
+  select(-all_of(cols_quali), -secteur_public)
+
+#matrice des corrélations
+corrplot(cor(data_quanti), method="circle", type="upper", 
+         tl.cex = 0.6, tl.col = "black")
+
+
+# secteur_public comme variable quantitative supplémentaire
+# variables géographiques comme variables qualitatives supplémentaires
+lycees_pca <- PCA(data_acp_full, 
+                  graph = FALSE, 
+                  scale.unit = TRUE, 
+                  quanti.sup = idx_secteur,
+                  quali.sup = idx_quali)
+
+# ===== 3. VALEURS PROPRES =====
+cat("\n===== VALEURS PROPRES =====\n")
+print(lycees_pca$eig)
+
+# Graphique des valeurs propres (scree plot)
+fviz_screeplot(lycees_pca, addlabels = TRUE, choice = "variance") +
+  ggtitle("Éboulis des valeurs propres - Lycées français")
+
+fviz_pca_var(lycees_pca,
+             axes = c(1,2),
+             col.var = "contrib",
+             gradient.cols = c("lightgrey","blue","red"),
+             repel = TRUE) +
+  ggtitle("Contribution des variables")
+
+
+
+```
+Les deux premières dimensions de l'ACP expliquent 53,8% de la variance entre les lycées.
+On retrouve des résultats classiques, comme la corrélation positive entre IPS et taux de réussite, ainsi que notre résultat précédent sur la relation négative entre l'IVAL en 2016 et sa variation jusqu'en 2024. On peut noter une lègre corrélation entre le taux d'accès de la seconde au Bac et le taux de réussite du lycée. Si la relation peut paraître évidente (moins de décrochage entre la seconde et le bac destinent à une bonne réussite au bac), on aurait aussi pu s'attendre à l'inverse (certains lycées explusent les moins bons élèves pour se garantir un taux de réussite optimisé). Les deux effets coexistent.
+
+
+On remarque un effet égalisateur de la réforme du Bac sur les IVAL des lycées français, il convient désormais de savoir si cette égalisation s'est faite vers le haut.
+```{r}
+
+
+taux_moyen_reussite_nat <- IVAL_IPS_gt %>%
+  summarise(
+    `Taux de réussite 2016` = mean(`Taux de réussite - Toutes séries_2016`, na.rm = TRUE),
+    `Taux de réussite 2024` = mean(`Taux de réussite - Toutes séries_2024`, na.rm = TRUE)
+  )
+
+# Affichage avec titre
+kable(taux_moyen_reussite_nat, caption = "Taux de réussite national")
+
+```
+Le taux de réussite au Bac à gagné 3 points de pourcentage entre 2016 et 2024. L'objectif annoncé de cette réforme étant de faciliter l'obtention du Bac en valorisant le travail fourni toute l'année scolaire, on peut penser au vu de cette première approche que la réforme a été réussie. 
+
+# 4 Conclusion
+
+Les lycées français connaissent des inégalités importantes, géographiquement et socialement situées, sur lesquelles nous revennons dans cette analyse. Les outre-mers notamment sont les plus défavorisés en termes d'éloignement des lycées et de position sociale des élèves. Ils sont aussi les départements qui comptent le moins de lycées privés, qui pour leur part obtiennent de meilleurs résultats, sur tout le territoire français. Sans pouvoir remédier à nombre de ces enjeux d'éducation, la réforme du Bac opérée en 2021 a toutefois eu des résultats intéressants sur la "valeur ajoutée" des lycées, qui correspond à leur apport isolemment de la position sociale des élèves, vis à vis de la réussite au Bac.
+Les valeurs ajoutées des lycées ont, en tendance, varié positivement dans les moins bons lycées et négativement dans les bons lycées, réduisant ainsi la dispertion de la valeur ajoutée. Les lycées sont plus homogènes dans leur apport depuis la réforme, et ce dans une trajectoire à priori positive, si l'on s'en tient au taux de réussite au bac national qui s'est amélioré entre 2016 et 2024.
+
+# Bibliographie
+
+## Articles et rapports
+
+Insee. (1998). France, portrait social. Consulté le 10 décembre 2025 sur https://www.bnsp.insee.fr/ark:/12148/bpt6k6475495h/f5
+
+Insee. (2003). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/1371826
+
+Insee. (2025). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/8612596
+
+OECD. (2018). Can equity in education foster social mobility? PISA, OECD Publishing. https://doi.org/10.1787/9789264307230-en
+
+Rocher, T. (2016). Construction d'un indice de position sociale des élèves. Éducation & Formations, (90), 5–27. https://doi.org/10.48464/ef-90-01
+
+## Jeux de données
+
+Institut national de l’information géographique et forestière (IGN). (2025). ADMIN-EXPRESS, édition Décembre 2025 France entière [Jeu de données géographiques]. Disponibles sur https://geoservices.ign.fr/adminexpress
+
+Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées (2016-2021) [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips_lycees
+
+Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées - Année scolaire 2022-2023 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2022
+
+Ministère de l’éducation nationale. (2024). Indices de position sociale des lycées - Année scolaire 2023-2024 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2023
+
+Ministère de l’éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées d'enseignement général et technologique  [Jeu de données]. https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-gt_v2
+
+Ministère de l’Éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées professionnels [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-pro_v2
+
