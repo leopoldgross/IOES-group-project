@@ -22,6 +22,7 @@ Les IVAL évaluent l'efficacité d'un établissement en mesurant sa capacité à
 L'indice d’éloignement synthétise l'isolement géographique des établissements selon plusieurs dimensions : le lieu de résidence des élèves, l’offre d’enseignement et les équipements aux alentours.
 
 Cette courte analyse a pour objectif de faire un état des lieux de ce que nous montrent ces différents indicateurs en termes de dispartiés régionales, puis s'intérrogent sur les caractéristiques qui peuvent jouer sur la valeur ajoutée des lycées.
+
 # 2 Méthodologie et sources
 
 Cette étude s’appuie sur trois sources de données publiées par le ministère de l'Éducation nationale : l'indice de position sociale (IPS), les indicateurs de valeur ajoutée des lycées (IVAL) et l'indice d'éloignement. Le logiciel R a été utilisé pour l'ensemble de l'analyse statistique et de la production du rapport.
@@ -32,7 +33,7 @@ L'IPS, mesuré depuis 2016, a été extrait de trois bases de données distincte
 
 Des outils d'intelligence artificielle générative (LLM) ont été utilisés pour la rédaction du code R de cette analyse. En particulier, l'IA a été exploitée pour corriger le code en cas d'erreurs et pour améliorer l'apparence des graphiques et des cartographies. L'utilisation de l'IA a toujours été faite avec un regard critique et analytique, en vérifiant manuellement le code à chaque fois.
 
-# 3 Analysis
+# 3 Analyse
 
 ```{r, echo = FALSE, message = FALSE}
 #| message: false
@@ -153,7 +154,11 @@ Nous proposons de commencer par établir quelques statistiques déscriptives, à
 
 ## Indice moyen d'éloignement par region et par académie pour 2024
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| fig-width: 10
 
 # Indice moyen d'éloignement par region pour 2024 
 
@@ -166,6 +171,22 @@ ggplot(Eloi2024_Reg, aes(x = fct_reorder(region, moyenne_eloignement_2024),
   theme_minimal() +
   labs(
     title = "Indice moyen d'éloignement par region (2024)",
+    x = "Region",
+    y = "Indice moyen"
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  labs(fill = NULL)
+
+# Indice moyen d'éloignement par académie pour 2024 
+
+Eloi2024_Acad <- IVAL_IPS_gt |> group_by(Académie)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) 
+  
+ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024), 
+           y = moyenne_eloignement_2024, 
+           fill = moyenne_eloignement_2024)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Indice moyen d'éloignement par académie (2024)",
     x = "Region",
     y = "Indice moyen"
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
@@ -187,7 +208,14 @@ La situation est différente pour la Corse, la Guyane et la Guadeloupe, qui se d
 ## Indice moyen d'eloignement par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
 
 ```{r} 
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
+#| fig-height: 8
+#| fig-width: 10
+
 
 Eloi2024_Dep <- IVAL_IPS_gt |> group_by(Département)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(Département="Département") 
 
@@ -213,26 +241,45 @@ guyane     <- departement_eloi |> filter(code_insee == "973")
 reunion    <- departement_eloi |> filter(code_insee == "974")
 mayotte    <- departement_eloi |> filter(code_insee == "976")
 
-tm_shape(metropole) + tm_fill(fill="moyenne_eloignement_2024",
-                             fill.scale=tm_scale_intervals(values="kovesi.blue", n=10,
-                                                           style="quantile"),
-                              fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_layout(frame=FALSE, component.autoscale = FALSE) + tm_title ("France métropolitaine", frame = TRUE) +
-  tm_borders(col = "darkblue", lwd = 0.3)
-                                    
+breaks_national <- quantile(departement_eloi$moyenne_eloignement_2024, 
+                             probs = seq(0, 1, length.out = 11), 
+                             na.rm = TRUE)
 
-m_gua <- tm_shape(guadeloupe) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guadeloupe") + tm_borders(col = "darkblue", lwd = 0.3)
-m_mar <- tm_shape(martinique) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Martinique") + tm_borders(col = "darkblue", lwd = 0.3)
-m_guy <- tm_shape(guyane) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Guyane") + tm_borders(col = "darkblue", lwd = 0.3)
-m_reu <- tm_shape(reunion) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Réunion") + tm_borders(col = "darkblue", lwd = 0.3)
-m_may <- tm_shape(mayotte) + tm_fill("moyenne_eloignement_2024", fill.legend = tm_legend(title = "Moyenne éloignement 2024")) + tm_title("Mayotte") + tm_borders(col = "darkblue", lwd = 0.3)
+# Carte France Métropolitaine
+map_metropole <- tm_shape(metropole) + 
+  tm_fill(
+    fill = "moyenne_eloignement_2024",
+    fill.scale = tm_scale_intervals(
+      values = "kovesi.blue",
+      breaks = breaks_national),
+    fill.legend = tm_legend(title = "Indice moyen 2024")) + 
+  tm_borders(col = "darkblue", lwd = 0.2) +
+  tm_layout(frame = FALSE)
 
-tmap_arrange(m_gua, m_mar, m_guy, m_reu, m_may, ncol = 5, nrow = 1)
+# Carte Dèpartements OM
+map_drom <- rbind(guadeloupe, martinique, guyane, reunion, mayotte)
+
+map_drom <- tm_shape(map_drom) +
+  tm_fill(
+    fill = "moyenne_eloignement_2024",
+    fill.scale = tm_scale_intervals(
+      values = "kovesi.blue",
+      breaks = breaks_national),
+    fill.legend = tm_legend(show = FALSE)) +
+  tm_borders(col = "darkblue", lwd = 0.3) +
+  tm_facets(by = "Département", nrow = 1, free.coords = TRUE) + 
+  tm_layout(frame = FALSE, panel.label.size = 0.8, component.autoscale = FALSE)
+
+tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
 ```
 
 # IVAL
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
 
 ival_dep <- IVAL_IPS_gt |>
   mutate(
@@ -278,7 +325,11 @@ On semble constater un certain regroupement de départements dont l'IVAL des lyc
 Nous proposons quelques autres statistiques déscriptives de nos variables d'intérêt, par académies.
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 # nombre de lycées privés par académie.
@@ -299,7 +350,11 @@ Les académies françaises sont très hétérogènes dans leur quantité de lyc�
 
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 
@@ -329,8 +384,11 @@ si l'IVAL est positivement corrélé à l'IPS, cela veut dire que l'effet positi
 Nous proposons une simple régression linéaire sur l'année 2020 pour vérifier l'existence d'un lien statistique.
 
 ```{r}
+#| echo: false
 #| message: false
-
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 reg1_2020 <- lm(
@@ -346,7 +404,11 @@ Premier résultat : cette régression n'explique pas l'IVAL. L'IVAL est bien cor
 
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 #On propose donc une seconde régression, classique, du taux de réussite 
@@ -371,7 +433,11 @@ Dans cette partie, nous allons nous intérroger sur l'effet qu'à pu avoir la r�
 
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 
@@ -398,7 +464,11 @@ Examinons si l'effet est différencié selon le secteur.
 Pour cela, nous allons calculer la variation de l'IVAL entre 2016 et 2024, avec une simple différence. Nous choissisons 2016, plus éloignée de la réforme de 2021 que l'année 2020 car l'année 2020 comporte un biais majeur dans son IVAL qui est la pandémie de la  Covid-19. La génération d'élèves en classe de Terminale en 2020 n'a pas passé le bac à proprement parler, les notes ont été décidées par les enseignants en fonction du niveau de l'élève sur l'année.
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 
@@ -452,8 +522,11 @@ Les graphiques donnent l'impression visuelle que l'IVAL a plus varié dans les l
 Vérifions cette observation.
 
 ```{r}
+#| echo: false
 #| message: false
-
+#| warning: false
+#| fig-align: center
+#| results: false
 
 ggplot(IVAL_IPS_gt, aes(x = factor(secteur_public),
                         y = var_IVAL_1624,
@@ -475,7 +548,11 @@ Les boites à moustaches confirment que le secteur public a connu une variation 
 Nous allons désormais voir si le niveau initial de l'IVAL moyen d'un département est un élément explicatif de la variation qu'on y observe depuis la réforme.
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 var_IVAL_dep <- IVAL_IPS_gt %>%
@@ -515,7 +592,11 @@ On trouve qu'il existe une relation très claire entre l'Ival moyen initial d'un
 Géographiquement : 
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 
@@ -548,7 +629,11 @@ Nous proposons une analyse en composantes principales pour examiner à plat tout
 # Analyse en composantes principales. 
 
 ```{r}
+#| echo: false
 #| message: false
+#| warning: false
+#| fig-align: center
+#| results: false
 
 
 
@@ -634,11 +719,11 @@ Les valeurs ajoutées des lycées ont, en tendance, varié positivement dans les
 
 ## Articles et rapports
 
-Insee. (1998). France, portrait social. Consulté le 10 décembre 2025 sur https://www.bnsp.insee.fr/ark:/12148/bpt6k6475495h/f5
+Insee. (1998). France, portrait social. Consulté le 10 décembre 2025 sur https://www.bnsp.inse\-e.fr/ark:/12148/bpt6k6475495h/f5
 
-Insee. (2003). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/1371826
+Insee. (2003). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr\-/fr/statistiques/1371826
 
-Insee. (2025). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr/fr/statistiques/8612596
+Insee. (2025). France, portrait social. Consulté le 10 décembre 2025 sur https://www.insee.fr\-/fr/statistiques/8612596
 
 OECD. (2018). Can equity in education foster social mobility? PISA, OECD Publishing. https://doi.org/10.1787/9789264307230-en
 
@@ -646,15 +731,16 @@ Rocher, T. (2016). Construction d'un indice de position sociale des élèves. É
 
 ## Jeux de données
 
-Institut national de l’information géographique et forestière (IGN). (2025). ADMIN-EXPRESS, édition Décembre 2025 France entière [Jeu de données géographiques]. Disponibles sur https://geoservices.ign.fr/adminexpress
+Institut national de l’information géographique et forestière (IGN). (2025). ADMIN-EXPRESS, édition Décembre 2025 France entière [Jeu de données géographiques]. 
+Disponibles sur https://geoservices.ign.fr/adminexpress
 
 Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées (2016-2021) [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips_lycees
 
-Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées - Année scolaire 2022-2023 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2022
+Ministère de l’éducation nationale. (2023). Indices de position sociale des lycées - Année scolaire 2022-2023 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/data\-set/fr-en-ips-lycees-ap2022
 
-Ministère de l’éducation nationale. (2024). Indices de position sociale des lycées - Année scolaire 2023-2024 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-ips-lycees-ap2023
+Ministère de l’éducation nationale. (2024). Indices de position sociale des lycées - Année scolaire 2023-2024 [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/data\-set/fr-en-ips-lycees-ap2023
 
-Ministère de l’éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées d'enseignement général et technologique  [Jeu de données]. https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-gt_v2
+Ministère de l’éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées d'enseignement général et technologique  [Jeu de données]. https://data.education.gouv.fr/ex\-plore/dataset/fr-en-indicateurs-de-resultat-des-lycees-gt_v2
 
 Ministère de l’Éducation nationale. (2024). Indicateurs de valeur ajoutée des lycées professionnels [Jeu de données]. Disponibles sur https://data.education.gouv.fr/explore/dataset/fr-en-indicateurs-de-resultat-des-lycees-pro_v2
 
