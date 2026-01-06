@@ -307,7 +307,7 @@ departements_sf <- st_read("Carto_France.gpkg", layer = "departement") |>
   rename(Département = nom_officiel_en_majuscules)
 
 departements_sf <- departements_sf |>
-  left_join(ival_dep, by = "Département")
+  left_join(ival_dep)
 
 
 metropole_ival <- departements_sf  |> filter(!grepl("^97", code_insee))
@@ -317,13 +317,13 @@ guyane_ival     <- departements_sf  |> filter(code_insee == "973")
 reunion_ival    <- departements_sf  |> filter(code_insee == "974")
 mayotte_ival    <- departements_sf  |> filter(code_insee == "976")
 
-breaks_national <- quantile(departements_sf$moyenne_IVAL_2024.x, 
+breaks_national <- quantile(departements_sf$moyenne_IVAL_2024, 
                              probs = seq(0, 1, length.out = 11), 
                              na.rm = TRUE)
 
 map_metropole <- tm_shape(metropole_ival) + 
   tm_fill(
-    fill = "moyenne_IVAL_2024.x",
+    fill = "moyenne_IVAL_2024",
     fill.scale = tm_scale_intervals(
       values = "kovesi.blue",
       breaks = breaks_national),
@@ -332,11 +332,11 @@ map_metropole <- tm_shape(metropole_ival) +
   tm_layout(frame = FALSE)
 
 # Carte Dèpartements OM
-map_drom_ival <- rbind(guadeloupe, martinique, guyane, reunion, mayotte)
+map_drom_ival <- rbind(guadeloupe_ival, martinique_ival, guyane_ival, reunion_ival, mayotte_ival)
 
 map_drom_ival <- tm_shape(map_drom_ival) +
   tm_fill(
-    fill = "moyenne_IVAL_2024.x",
+    fill = "moyenne_IVAL_2024",
     fill.scale = tm_scale_intervals(
       values = "kovesi.blue",
       breaks = breaks_national),
@@ -349,6 +349,7 @@ tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
 
 
 ```
+
 On semble constater un certain regroupement de départements dont l'IVAL des lycées est inférieur en moyenne à -1,2 en Bourgogne Franche-Comté et au Nord de la France.
 
 ### Public et privé
