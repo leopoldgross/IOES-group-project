@@ -434,6 +434,8 @@ Second résultat : plus d'un tiers de la variation du taux de réussite (en 2020
 
 Nous avons pu vérifier que l'IVAL était bien corrigé de l'IPS, mais nous avons pu constater des dispartiés géographiques de l'IVAL. 
 Dans cette partie, nous allons nous intérroger sur l'effet qu'à pu avoir la réforme du bac de 2021 en France sur l'IVAL.
+La réforme a acté la suppression des filières traditionnelles (Littéraire,, Économique et Sociale, Scientifique) au profit d'un système de choix de spécialités, permettant aux élèves de personnaliser leur parcours scolaire. 
+L'objectif était de mieux préparer les lycéens à l'enseignement supérieur tout enhomogénéisant l'impact pédagogique des établissements. La présente analyse se propose d'examiner dans quelle mesure cette refonte a infléchi la distribution de l'IVAL au sein du paysage éducatif français. 
 
 
 ```{r}
