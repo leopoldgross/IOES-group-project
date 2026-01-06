@@ -215,9 +215,6 @@ La situation est différente pour la Corse, la Guyane et la Guadeloupe, qui se d
 #| warning: false
 #| fig-align: center
 #| results: false
-#| fig-height: 8
-#| fig-width: 10
-
 
 Eloi2024_Dep <- IVAL_IPS_gt |> group_by(Département)  |> summarize(moyenne_eloignement_2024 = mean(`Indice éloignement_2024`, na.rm = TRUE)) |> rename(Département="Département") 
 
@@ -476,7 +473,7 @@ L'objectif était de mieux préparer les lycéens à l'enseignement supérieur t
 #| warning: false
 #| fig-align: center
 #| results: false
-
+#| fig-width: 10
 
 
 IVAL_distrib <- IVAL_IPS_gt %>%
@@ -507,7 +504,7 @@ Pour cela, nous allons calculer la variation de l'IVAL entre 2016 et 2024, avec 
 #| warning: false
 #| fig-align: center
 #| results: false
-
+#| fig-width: 10
 
 
 #Nous calculons la variation de l'IVAL de chaque lycée, avant et après la réforme du bac, et l'IPS moyen du lycée sur les 3 années.
@@ -565,6 +562,7 @@ Vérifions cette observation.
 #| warning: false
 #| fig-align: center
 #| results: false
+#| fig-width: 10
 
 ggplot(IVAL_IPS_gt, aes(x = factor(secteur_public),
                         y = var_IVAL_1624,
@@ -591,7 +589,7 @@ Nous allons désormais voir si le niveau initial de l'IVAL moyen d'un départeme
 #| warning: false
 #| fig-align: center
 #| results: false
-
+#| fig-width: 10
 
 var_IVAL_dep <- IVAL_IPS_gt %>% 
   mutate(
