@@ -269,6 +269,8 @@ tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
 
 ## 3.2 IVAL
 
+### IVAL moyen par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
+
 ```{r}
 #| echo: false
 #| message: false
