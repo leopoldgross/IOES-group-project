@@ -277,6 +277,8 @@ tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
 
 ## 3.2 IVAL
 
+### IVAL moyen par Département en 2024 pour la France metropolitaine et les territoires d'outre-mer
+
 ```{r}
 #| echo: false
 #| message: false
@@ -288,7 +290,6 @@ ival_dep <- IVAL_IPS_gt |>
   mutate(
     Département = toupper(trimws(Département)),
     Département = gsub("’", "'", Département),
-
     Département = dplyr::recode(
       Département,
       "ALPES-DE-HTE-PROVENCE" = "ALPES-DE-HAUTE-PROVENCE",
@@ -296,9 +297,7 @@ ival_dep <- IVAL_IPS_gt |>
       "COTES D'ARMOR"         = "COTES-D'ARMOR",
       "HAUTE SAVOIE"          = "HAUTE-SAVOIE",
       "SEINE MARITIME"        = "SEINE-MARITIME",
-      "LA REUNION"            = "LA RÉUNION"
-    )
-  ) %>% 
+      "LA REUNION"            = "LA RÉUNION")) %>% 
   group_by(Département) |>
   summarise(
     moyenne_IVAL_2016 = mean(`IVAL_2016`, na.rm = TRUE), 
@@ -311,16 +310,44 @@ departements_sf <- departements_sf |>
   left_join(ival_dep, by = "Département")
 
 
-tm_shape(departements_sf) +
+metropole_ival <- departements_sf  |> filter(!grepl("^97", code_insee))
+guadeloupe_ival <- departements_sf  |> filter(code_insee == "971")
+martinique_ival <- departements_sf  |> filter(code_insee == "972")
+guyane_ival     <- departements_sf  |> filter(code_insee == "973")
+reunion_ival    <- departements_sf  |> filter(code_insee == "974")
+mayotte_ival    <- departements_sf  |> filter(code_insee == "976")
+
+breaks_national <- quantile(departements_sf$moyenne_IVAL_2024.x, 
+                             probs = seq(0, 1, length.out = 11), 
+                             na.rm = TRUE)
+
+map_metropole <- tm_shape(metropole_ival) + 
   tm_fill(
-    "moyenne_IVAL_2024",
+    fill = "moyenne_IVAL_2024.x",
     fill.scale = tm_scale_intervals(
-      style = "quantile",
-      values = "kovesi.blue"
-    ),
-    fill.legend = tm_legend(title = "IVAL moyen (2024)")
-  ) +
+      values = "kovesi.blue",
+      breaks = breaks_national),
+    fill.legend = tm_legend(title = "Indice moyen IVAL 2024")) + 
+  tm_borders(col = "darkblue", lwd = 0.2) +
   tm_layout(frame = FALSE)
+
+# Carte Dèpartements OM
+map_drom_ival <- rbind(guadeloupe, martinique, guyane, reunion, mayotte)
+
+map_drom_ival <- tm_shape(map_drom_ival) +
+  tm_fill(
+    fill = "moyenne_IVAL_2024.x",
+    fill.scale = tm_scale_intervals(
+      values = "kovesi.blue",
+      breaks = breaks_national),
+    fill.legend = tm_legend(show = FALSE)) +
+  tm_borders(col = "darkblue", lwd = 0.3) +
+  tm_facets(by = "Département", nrow = 1, free.coords = TRUE) + 
+  tm_layout(frame = FALSE, panel.label.size = 0.8, component.autoscale = FALSE)
+
+tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
+
+
 ```
 On semble constater un certain regroupement de départements dont l'IVAL des lycées est inférieur en moyenne à -1,2 en Bourgogne Franche-Comté et au Nord de la France.
 
