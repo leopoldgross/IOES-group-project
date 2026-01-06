@@ -334,6 +334,7 @@ Nous proposons quelques autres statistiques déscriptives de nos variables d'int
 #| warning: false
 #| fig-align: center
 #| results: false
+#| fig-width: 10
 
 
 # nombre de lycées privés par académie.
@@ -359,6 +360,7 @@ Les académies françaises sont très hétérogènes dans leur quantité de lyc�
 #| warning: false
 #| fig-align: center
 #| results: false
+#| fig-width: 10
 
 
 
