@@ -187,7 +187,7 @@ ggplot(Eloi2024_Acad, aes(x = fct_reorder(Académie, moyenne_eloignement_2024),
   theme_minimal() +
   labs(
     title = "Indice moyen d'éloignement par académie (2024)",
-    x = "Region",
+    x = "Académie",
     y = "Indice moyen"
   ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
   labs(fill = NULL)
