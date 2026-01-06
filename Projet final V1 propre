@@ -1,8 +1,8 @@
 ---
-title: "Projet final - "
+title: "Projet final pour Sciences des Données"
 format: pdf 
 editor: visual
-author: "Jacopo Caja, Hilde Teichgraber, Léopold Gross"
+author: "Jacopo Caja, Hilde Teichgräber, Léopold Gross"
 code-fold: true
 execute:
   warning: false
@@ -33,7 +33,8 @@ L'IPS, mesuré depuis 2016, a été extrait de trois bases de données distincte
 
 Des outils d'intelligence artificielle générative (LLM) ont été utilisés pour la rédaction du code R de cette analyse. En particulier, l'IA a été exploitée pour corriger le code en cas d'erreurs et pour améliorer l'apparence des graphiques et des cartographies. L'utilisation de l'IA a toujours été faite avec un regard critique et analytique, en vérifiant manuellement le code à chaque fois.
 
-# 3 Analyse
+# 3 Analyse 
+## i dont understand hwy this shows up as "Driver: GPKG , Available layers ..." in the pdf - is it necessary to show it? or should we rather hide that? or is it just in my version that it does so?
 
 ```{r, echo = FALSE, message = FALSE}
 #| message: false
@@ -274,6 +275,7 @@ tmap_arrange(map_metropole, map_drom, ncol = 1, heights = c(0.7, 0.3))
 ```
 
 # IVAL
+## ici pareil, si je render ca m'affiche du code dans le pdf
 
 ```{r}
 #| echo: false
@@ -320,6 +322,7 @@ tm_shape(departements_sf) +
   tm_layout(frame = FALSE)
 ```
 On semble constater un certain regroupement de départements dont l'IVAL des lycées est inférieur en moyenne à -1,2 en Bourgogne Franche-Comté et au Nord de la France.
+
 # Public et privé
 
 Nous proposons quelques autres statistiques déscriptives de nos variables d'intérêt, par académies.
@@ -376,7 +379,7 @@ IPS_acad %>% ggplot(aes(x=fct_reorder(Académie,IPS_moyen), y=IPS_moyen, fill=IP
 ```
 On constate que les départements outre-mer sont tous les plus défavorisés en termes de position sociale, tantdis que la Paris et Versailles ressortent du lot avec une position sociale moyenne plus élevée.
 
-# Analyse de l'IVAL.
+# Analyse de l'IVAL
 
 Nous proposons de débuter avec une intuition qui a été la notre : 
 si l'IVAL est positivement corrélé à l'IPS, cela veut dire que l'effet positif, isolé, du lycée sur la réussite de ses élèves est malgré tout corrélé à la condition sociale des élèves qui le fréquentent. Autrement dit, l'effet positif du lycée, sans prendre en compte le niveau des élèves, donc par exemple la qualité des enseignants, la qualité du matériel, de l'accompagnement proposé, du CDI etc pourrait être la meilleure là ou les élèves ont la meilleure condition sociale.
@@ -426,10 +429,10 @@ summary(reg2_2020)
 Second résultat : plus d'un tiers de la variation du taux de réussite (en 2020, bac général) est expliquée par IPS + eloignement + secteur. On remarque un effet positif de l'IPS et de l'éloignement (effets robustes mais légers), et un effet négatif du secteur public. (effet plus fort et robuste). On confirme donc l'état des lieux standard qui est donné sur l'éducation secondaire en France : les lycées publics ont de moins bons résultats que les lycées privés, et une meilleure position sociale moyenne amène à de meilleurs résultats.
 
 
-# Effet égalisateur de la réforme du bac.
+# Effet égalisateur de la réforme du bac
 
 Nous avons pu vérifier que l'IVAL était bien corrigé de l'IPS, mais nous avons pu constater des dispartiés géographiques de l'IVAL. 
-Dans cette partie, nous allons nous intérroger sur l'effet qu'à pu avoir la réforme du BAC de 2021 en France sur l'IVAL.
+Dans cette partie, nous allons nous intérroger sur l'effet qu'à pu avoir la réforme du bac de 2021 en France sur l'IVAL.
 
 
 ```{r}
@@ -461,7 +464,7 @@ Ce graphique permet de constater que la distribution des IVAL après la réforme
 
 
 Examinons si l'effet est différencié selon le secteur.
-Pour cela, nous allons calculer la variation de l'IVAL entre 2016 et 2024, avec une simple différence. Nous choissisons 2016, plus éloignée de la réforme de 2021 que l'année 2020 car l'année 2020 comporte un biais majeur dans son IVAL qui est la pandémie de la  Covid-19. La génération d'élèves en classe de Terminale en 2020 n'a pas passé le bac à proprement parler, les notes ont été décidées par les enseignants en fonction du niveau de l'élève sur l'année.
+Pour cela, nous allons calculer la variation de l'IVAL entre 2016 et 2024, avec une simple différence. Nous choissisons 2016, plus éloignée de la réforme de 2021 que l'année 2020 car l'année 2020 comporte un biais majeur dans son IVAL qui est la pandémie de Covid-19. La génération d'élèves en classe de terminale en 2020 n'a pas passé le bac à proprement parler, les notes ont été décidées par les enseignants en fonction du niveau de l'élève sur l'année.
 
 ```{r}
 #| echo: false
@@ -587,9 +590,9 @@ ggplot(ival_dep, aes(x = moyenne_IVAL_2016, y = moyenne_var_IVAL)) +
     title = "Relation entre niveau initial et progression de l'IVAL"
   )
 ```
-On trouve qu'il existe une relation très claire entre l'Ival moyen initial d'un département en 2016 et sa variation jusqu'à sa valeur de 2024. Les départements avec un ival moyen bas ont connu une variation plus positive. Ce résultat vient confirmer à nouveau la possibilité d'un effet égalisateur de la réforme du bac.
+On trouve qu'il existe une relation très claire entre l'IVAL moyen initial d'un département en 2016 et sa variation jusqu'à sa valeur de 2024. Les départements avec un IVAL moyen bas ont connu une variation plus positive. Ce résultat vient confirmer à nouveau la possibilité d'un effet égalisateur de la réforme du bac.
 
-Géographiquement : 
+Géographiquement : ## je pense qu'on pourrait enlever cette partie, vue qu'on a deja fait une bonne projection des geodonnees et vu que c'est sans dom, et on donne pas beaucoup de contexte pourquoi ca serait interessant d'ajouter une carte ici
 
 ```{r}
 #| echo: false
@@ -697,7 +700,7 @@ On retrouve des résultats classiques, comme la corrélation positive entre IPS 
 On remarque un effet égalisateur de la réforme du Bac sur les IVAL des lycées français, il convient désormais de savoir si cette égalisation s'est faite vers le haut.
 ```{r}
 
-
+## dans ma version ca affiche du code ici, je pense que c'est pas neccessaire?
 taux_moyen_reussite_nat <- IVAL_IPS_gt %>%
   summarise(
     `Taux de réussite 2016` = mean(`Taux de réussite - Toutes séries_2016`, na.rm = TRUE),
@@ -715,7 +718,7 @@ Le taux de réussite au Bac à gagné 3 points de pourcentage entre 2016 et 2024
 Les lycées français connaissent des inégalités importantes, géographiquement et socialement situées, sur lesquelles nous revennons dans cette analyse. Les outre-mers notamment sont les plus défavorisés en termes d'éloignement des lycées et de position sociale des élèves. Ils sont aussi les départements qui comptent le moins de lycées privés, qui pour leur part obtiennent de meilleurs résultats, sur tout le territoire français. Sans pouvoir remédier à nombre de ces enjeux d'éducation, la réforme du Bac opérée en 2021 a toutefois eu des résultats intéressants sur la "valeur ajoutée" des lycées, qui correspond à leur apport isolemment de la position sociale des élèves, vis à vis de la réussite au Bac.
 Les valeurs ajoutées des lycées ont, en tendance, varié positivement dans les moins bons lycées et négativement dans les bons lycées, réduisant ainsi la dispertion de la valeur ajoutée. Les lycées sont plus homogènes dans leur apport depuis la réforme, et ce dans une trajectoire à priori positive, si l'on s'en tient au taux de réussite au bac national qui s'est amélioré entre 2016 et 2024.
 
-# Bibliographie
+# 5 Bibliographie
 
 ## Articles et rapports
 
