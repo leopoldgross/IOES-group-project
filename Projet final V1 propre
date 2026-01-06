@@ -565,7 +565,21 @@ Nous allons désormais voir si le niveau initial de l'IVAL moyen d'un départeme
 #| results: false
 
 
-var_IVAL_dep <- IVAL_IPS_gt %>%
+var_IVAL_dep <- IVAL_IPS_gt %>% 
+  mutate(
+    Département = toupper(trimws(Département)),
+    Département = gsub("’", "'", Département),
+
+    Département = dplyr::recode(
+      Département,
+      "ALPES-DE-HTE-PROVENCE" = "ALPES-DE-HAUTE-PROVENCE",
+      "COTE D'OR"             = "COTE-D'OR",
+      "COTES D'ARMOR"         = "COTES-D'ARMOR",
+      "HAUTE SAVOIE"          = "HAUTE-SAVOIE",
+      "SEINE MARITIME"        = "SEINE-MARITIME",
+      "LA REUNION"            = "LA RÉUNION"
+    )
+  ) %>% 
   group_by(Département) %>%
   summarise(
     moyenne_var_IVAL = mean(var_IVAL_1624, na.rm = TRUE),
